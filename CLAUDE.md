@@ -1,0 +1,105 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Repository state
+
+This repository currently contains no source code — only a design document at
+`doc/mobile_store_implementation_guide.md`. There is no backend, frontend, build
+tooling, package manifests, or test suite yet, and the directory is not (currently)
+a git repository. There are no build/lint/test commands to document because nothing
+has been scaffolded.
+
+When asked to start implementation, follow the architecture and phased plan described
+below (full detail in the design doc) rather than inventing a different stack or
+structure. Once code exists, update this file with real build/lint/test commands and
+remove the guidance that's no longer needed.
+
+## What is being built
+
+A mobile-friendly product inventory / storefront web app where customers browse a
+catalog, build a cart, and check out with **Card** or **Cash on Delivery**. Orders are
+sent to a WhatsApp business account for the operator to manually confirm stock, price,
+and delivery before payment is finalized. Target stack: **Spring Boot + PostgreSQL**
+backend, **Angular 21 + PrimeNG** frontend.
+
+## Non-negotiable design principles
+
+These are called out repeatedly in the design doc and should govern any implementation
+decisions, even ones not explicitly asked about:
+
+1. **PostgreSQL is the sole source of truth.** WhatsApp is a communication/confirmation
+   channel only — never treat a WhatsApp message as the order record.
+2. **The backend recalculates prices/discounts server-side on every checkout.** Never
+   trust a client-supplied price.
+3. **Orders store immutable price/product snapshots** (`OrderItem.sku_snapshot`,
+   `product_name_snapshot`, `unit_price`, `final_unit_price`, ...) so historical orders
+   are unaffected by later product/price changes.
+4. **Inventory changes are transactional** and use an explicit ledger
+   (`InventoryMovement`: PURCHASE/SALE/RESERVATION/RELEASE/ADJUSTMENT/RETURN) rather
+   than only overwriting a stock counter. Prevent overselling with locking/optimistic
+   versioning inside the checkout transaction.
+5. **Order status and payment status are separate state machines.** E.g.
+   `order_status = CONFIRMED` with `payment_status = PENDING` is valid for COD. Never
+   allow arbitrary status transitions — enforce a defined transition table
+   (`PENDING_CONFIRMATION → CONFIRMED → PREPARING → READY_FOR_DELIVERY →
+   OUT_FOR_DELIVERY → DELIVERED`, with `CANCELLED`/`REJECTED`/`FAILED_DELIVERY` as
+   applicable branches).
+6. **WhatsApp delivery uses the transactional outbox pattern.** Never call the
+   WhatsApp API inside the same DB transaction as order creation — write a
+   `MessageOutbox` row in the transaction, then send asynchronously from a background
+   worker with retry/backoff. A WhatsApp outage must never roll back or hide a
+   successfully created order.
+7. **Idempotency is required at checkout** (client-supplied `Idempotency-Key`) and for
+   WhatsApp sends / payment webhooks, to survive duplicate submissions and retries.
+8. **Card payments go through a PCI-compliant, hosted/tokenized provider.** Card
+   details never touch the Spring Boot app. Payment is only marked `PAID` from a
+   provider webhook — never from the browser's success response alone. Prefer
+   creating the payment session only after the business has confirmed the order.
+9. **Admin authorization is enforced by Spring Security, not Angular route guards.**
+   Guards are UX only; every admin endpoint must independently check
+   permissions/authorities server-side (prefer permissions like `PRODUCT_UPDATE` over
+   role-name checks).
+10. **Products are archived/deactivated, never hard-deleted**, if they have historical
+    order references (`ACTIVE → INACTIVE → ARCHIVED`).
+11. **Guest checkout is the MVP default** — no customer accounts/registration unless
+    there's a real business need.
+12. Start as a **modular monolith**; do not introduce microservices, Elasticsearch,
+    Kafka, or a message broker until scale/ops genuinely require it. Use PostgreSQL
+    full-text/trigram search before reaching for a search engine.
+
+## Intended module boundaries
+
+Backend logical modules (can be physically combined at first, but keep the
+boundaries): Identity & Security, Admin/User Management, Catalog, Product Media,
+Categories, Pricing & Discounts, Inventory, Search, Cart, Checkout, Orders, Payments,
+Delivery, WhatsApp Integration, Notifications, Audit, Configuration, Reporting.
+
+Suggested Spring package layout mirrors this: `com.example.store.{auth, catalog,
+category, inventory, cart, checkout, order, payment, delivery, whatsapp, notification,
+audit, configuration, common}` — business rules live in services/domain, not
+controllers.
+
+`CheckoutService` is the most important service: it orchestrates idempotency check →
+load cart → server-side pricing recalculation → inventory reservation → order creation
+→ payment initialization → outbox enqueue, all inside one `@Transactional` boundary
+(external HTTP calls excluded from that transaction).
+
+Suggested Angular structure: `core/` (auth, guards, interceptors, services, models),
+`shared/` (components, pipes, directives, validators), `features/` (catalog,
+product-detail, cart, checkout, order-confirmation, and `admin/*` sub-features),
+`layout/` (public-layout, admin-layout). Use standalone components and lazy-loaded
+feature routes.
+
+## Implementation sequence
+
+Follow this order to minimize rework (per the design doc): DB migrations (Flyway) →
+domain models → catalog API → admin security → admin product UI → public catalog UI →
+cart → pricing service → inventory → checkout → orders → outbox → WhatsApp → admin
+order workflow → card payment → monitoring/hardening.
+
+Reference `doc/mobile_store_implementation_guide.md` for full schema suggestions
+(products, categories, inventory, carts, orders, payments, message_outbox, audit_logs,
+app_settings), API route layout (`/api/v1/...`), error code conventions, and the phased
+MVP checklist — it is the authoritative spec for this build and should be kept in sync
+with any deviations made during implementation.
