@@ -1,0 +1,16 @@
+<div class="track-order">
+  <h1>Track your order</h1>
+  <p class="track-note">Enter your order number and the phone number you used at checkout.</p>
+
+  @if (error(); as message) {
+    <p-message severity="error" [text]="message" />
+  }
+
+  <label for="track-order-number">Order number</label>
+  <input id="track-order-number" pInputText [(ngModel)]="orderNumber" name="orderNumber" placeholder="ORD-20260101-000001" />
+
+  <label for="track-phone">Phone number</label>
+  <input id="track-phone" pInputText [(ngModel)]="phone" name="phone" (keyup.enter)="submit()" />
+
+  <p-button label="Check status" [loading]="loading()" [disabled]="!formValid" (onClick)="submit()" styleClass="track-submit" />
+</div>

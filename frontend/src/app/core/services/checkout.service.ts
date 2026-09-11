@@ -15,7 +15,10 @@ export class CheckoutService {
     });
   }
 
-  getByOrderNumber(orderNumber: string): Observable<OrderResponse> {
-    return this.http.get<OrderResponse>(`/api/orders/track/${orderNumber}`);
+  /** The order number alone isn't a valid credential (our order numbers are sequential) — the
+   *  phone number the order was placed with is required too (design doc §53). POST, not GET,
+   *  so the phone number never lands in a URL/browser history/server log. */
+  trackOrder(orderNumber: string, phone: string): Observable<OrderResponse> {
+    return this.http.post<OrderResponse>('/api/orders/track', { orderNumber, phone });
   }
 }

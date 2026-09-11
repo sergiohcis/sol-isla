@@ -2,6 +2,19 @@
   <p class="state-message">Loading...</p>
 } @else if (notFound()) {
   <p class="state-message">Order not found. <a routerLink="/">Back to catalog</a></p>
+} @else if (needsPhoneVerification()) {
+  <div class="verify-form">
+    <h1>Order {{ orderNumber }}</h1>
+    <p class="confirmation-note">Enter the phone number you used when placing this order to view it.</p>
+
+    @if (verifyError(); as message) {
+      <p-message severity="error" [text]="message" />
+    }
+
+    <label for="verify-phone">Phone number</label>
+    <input id="verify-phone" pInputText [(ngModel)]="phone" name="phone" (keyup.enter)="verifyPhone()" />
+    <p-button label="View order" [loading]="verifying()" [disabled]="!phone.trim()" (onClick)="verifyPhone()" />
+  </div>
 } @else if (order(); as o) {
   <div class="confirmation">
     <i class="pi pi-check-circle confirmation-icon"></i>

@@ -17,6 +17,7 @@ export const routes: Routes = [
       },
       { path: 'cart', loadComponent: () => import('./features/cart/cart').then((m) => m.Cart) },
       { path: 'checkout', loadComponent: () => import('./features/checkout/checkout').then((m) => m.Checkout) },
+      { path: 'track', loadComponent: () => import('./features/track-order/track-order').then((m) => m.TrackOrder) },
       {
         path: 'orders/:orderNumber/confirmation',
         loadComponent: () =>

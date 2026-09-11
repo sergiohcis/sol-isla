@@ -98,7 +98,10 @@ export class Checkout implements OnInit {
     this.checkoutService.checkout(request, this.idempotencyKey).subscribe({
       next: (order) => {
         this.cartService.refresh().subscribe();
-        this.router.navigate(['/orders', order.orderNumber, 'confirmation']);
+        // Pass the order we already have via router state so the confirmation page can show it
+        // immediately, without asking the customer to re-enter their phone number to look up
+        // the order they just placed (see OrderConfirmation's fallback for when this is absent).
+        this.router.navigate(['/orders', order.orderNumber, 'confirmation'], { state: { order } });
       },
       error: (err) => {
         this.submitting.set(false);

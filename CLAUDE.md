@@ -42,11 +42,26 @@ about it — see `CheckoutControllerIT`). Order numbers come from a Postgres seq
 concurrent checkouts. `DeliveryZone` (flat fee per zone, `/api/delivery/zones` public,
 `/api/admin/delivery/zones` gated by `DELIVERY_MANAGE`) supplies the delivery fee — no
 admin UI for zones yet, only the API; seed one via the admin API or build the UI
-whenever it's actually needed. `GET /api/orders/track/{orderNumber}` is the public
-order-lookup the order-confirmation page uses, with no additional secret beyond the
-order number itself (design doc §53). `PaymentStatus` starts `PENDING` for both `CARD`
+whenever it's actually needed. `PaymentStatus` starts `PENDING` for both `CARD`
 and `CASH_ON_DELIVERY` — real card-provider integration (CLAUDE.md rule 8: only a
 webhook may set `PAID`) is Phase 7.
+
+Order tracking (design doc §53) is `POST /api/orders/track` (order number + phone,
+never a `GET /{orderNumber}` — our order numbers are sequential, so the number alone
+is not a valid credential; a wrong phone and a nonexistent order number return the
+identical 404 so the endpoint can't be used to enumerate order numbers or confirm a
+phone's association with one). `OrderService.getByOrderNumber`/`getById` remain
+trusted, ownership-check-free lookups for internal use only (the WhatsApp worker,
+future admin endpoints) — never expose those to an unauthenticated caller.
+`Phones.matches` compares digits-only so formatting differences ("+1 555-123-4567" vs
+"15551234567") don't break a legitimate lookup. On the frontend: checkout passes the
+order it just created to the confirmation page via router state (no second network
+call, no re-asking for the phone the customer just typed); reaching that same page any
+other way (bookmark, or the public "Track your order" page at `/track`) falls back to
+asking for the phone number. There is deliberately no proactive customer notification
+channel (email/SMS/WhatsApp-to-customer) — the design doc doesn't specify one, and the
+existing WhatsApp integration (Phase 5) only ever messages the business's own number,
+never the customer's; this is a pull-only model; the customer checks status themselves.
 
 Phase 5: `OutboxWorker` (`@Scheduled`, every 30s) is the only thing that calls the
 WhatsApp Business Cloud API — `WhatsAppServiceImpl` posts to the Meta Graph API and

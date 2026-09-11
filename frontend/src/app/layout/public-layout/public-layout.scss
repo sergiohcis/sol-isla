@@ -58,4 +58,12 @@
   text-align: center;
   color: #6b7280;
   font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.track-order-link {
+  color: inherit;
+  text-decoration: underline;
 }

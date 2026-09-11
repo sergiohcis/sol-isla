@@ -145,10 +145,19 @@ class CheckoutControllerIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(0));
 
-        // Public tracking finds the same order.
-        mockMvc.perform(get("/api/orders/track/" + orderNumber))
+        // Public tracking finds the same order when the phone matches (formatting differences
+        // and all — the stored number has a leading "+", this one doesn't).
+        mockMvc.perform(post("/api/orders/track").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"orderNumber\":\"" + orderNumber + "\",\"phone\":\"15551234567\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.orderNumber").value(orderNumber));
+
+        // Wrong phone gets the same 404 a nonexistent order number would — no enumeration signal.
+        mockMvc.perform(post("/api/orders/track").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"orderNumber\":\"" + orderNumber + "\",\"phone\":\"+19998887777\"}"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
