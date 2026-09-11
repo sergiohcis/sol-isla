@@ -1,5 +1,9 @@
 package com.hosannasolutions.solisla.config;
 
+import com.hosannasolutions.solisla.cart.exception.CartItemNotFoundException;
+import com.hosannasolutions.solisla.cart.exception.CartNotFoundException;
+import com.hosannasolutions.solisla.cart.exception.InvalidCartQuantityException;
+import com.hosannasolutions.solisla.cart.exception.ProductNotAvailableException;
 import com.hosannasolutions.solisla.catalog.exception.DuplicateSkuException;
 import com.hosannasolutions.solisla.catalog.exception.InvalidProductStatusTransitionException;
 import com.hosannasolutions.solisla.catalog.exception.ProductImageNotFoundException;
@@ -36,7 +40,9 @@ public class GlobalExceptionHandler {
             CategoryNotFoundException.class,
             ProductNotFoundException.class,
             ProductImageNotFoundException.class,
-            InventoryNotFoundException.class
+            InventoryNotFoundException.class,
+            CartNotFoundException.class,
+            CartItemNotFoundException.class
     })
     public ProblemDetail handleNotFound(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
@@ -46,7 +52,9 @@ public class GlobalExceptionHandler {
             DuplicateUserEmailException.class,
             DuplicateSkuException.class,
             InvalidProductStatusTransitionException.class,
-            InsufficientStockException.class
+            InsufficientStockException.class,
+            ProductNotAvailableException.class,
+            InvalidCartQuantityException.class
     })
     public ProblemDetail handleConflict(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());

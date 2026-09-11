@@ -23,6 +23,8 @@ spring:
 sol-isla:
   storage:
     local-path: ${STORAGE_PATH:./storage}
+  cart:
+    max-quantity-per-item: 20
   whatsapp:
     # WhatsApp Business Cloud API credentials — externalized, never checked in. Empty by
     # default so the app still boots (and every other feature keeps working) before an

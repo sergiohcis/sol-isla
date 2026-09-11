@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-Phase 1 (Foundation) and Phase 2 (Catalog) are implemented. Phase 1: Spring Boot backend,
+Phase 1 (Foundation), Phase 2 (Catalog), and Phase 3 (Cart) are implemented. Phase 1: Spring Boot backend,
 Angular frontend, and the IIS deployment infra, with tooling/conventions that
 deliberately mirror the sibling `SweetHome` project (same shared Windows Server, same
 credentials, same non-Docker/session-cookie/Flyway/embedded-postgres-for-tests choices)
@@ -18,10 +18,25 @@ ledger (`inventory_movements`, not just a counter) with an admin stock-adjust en
 Public search/listing lives at `/api/products` (ACTIVE only); admin CRUD + image upload
 + inventory adjust live under `/api/admin/**`, gated by `@PreAuthorize` permissions
 (`PRODUCT_*`, `CATEGORY_*`, `INVENTORY_*` in `security/authorization/Permission.java`).
-Cart, checkout, payments, WhatsApp, etc. (Phases 3+) are not yet implemented; their
-backend packages exist only as empty `package-info.java` stubs to keep module
-boundaries in place. The public product-detail page has a disabled "Add to Cart"
-button — intentionally inert until Phase 3 wires up the cart.
+Phase 3: guest cart identified by an httpOnly cookie (`sol_isla_cart`, no accounts —
+CLAUDE.md rule 11), `/api/cart` + `/api/cart/items`. The cart never persists price —
+`CartServiceImpl.buildResponse` always reads the current product/discount live through
+`ProductPricingService`, same as the catalog (design doc §12). Add/update enforce both a
+configured per-item max (`sol-isla.cart.max-quantity-per-item`) and live available stock;
+a cart item's ownership is checked against the requesting cookie's cart on every
+update/remove so one guest can't touch another's cart by guessing an item id. The public
+product-detail page's "Add to Cart" and the header cart badge are wired to this for real.
+Checkout, payments, WhatsApp, etc. (Phase 4+) are not yet implemented; their backend
+packages exist only as empty `package-info.java` stubs to keep module boundaries in
+place. The cart page's "Proceed to Checkout" button is present but disabled —
+intentionally inert until Phase 4 wires up checkout.
+
+Testing note: Phase 2 shipped a real bug (`/api/products` 401ing on empty filters — see
+git history) that only surfaced testing against a live server, because no test actually
+called the endpoint. Every module built since (see `ProductControllerIT`,
+`CartControllerIT`) has a MockMvc-based integration test that exercises its real HTTP
+endpoints end-to-end (not just the service layer) — keep doing that for new modules
+rather than only unit-testing services.
 
 Build/test/run:
 

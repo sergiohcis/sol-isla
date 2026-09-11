@@ -1,0 +1,48 @@
+<p-toast />
+
+<h1>Your Cart</h1>
+
+@if (cart().items.length === 0) {
+  <div class="empty-cart">
+    <p>Your cart is empty.</p>
+    <a routerLink="/">Continue shopping</a>
+  </div>
+} @else {
+  <div class="cart-items">
+    @for (item of cart().items; track item.id) {
+      <div class="cart-item">
+        @if (item.primaryImageUrl) {
+          <img [src]="item.primaryImageUrl" [alt]="item.productName" class="item-image" />
+        } @else {
+          <div class="item-image placeholder"></div>
+        }
+
+        <div class="item-details">
+          <a [routerLink]="['/products', item.productSlug]" class="item-name">{{ item.productName }}</a>
+          <div class="item-unit-price">{{ item.unitPrice | number: '1.2-2' }} each</div>
+          @if (item.availableStock < item.quantity) {
+            <div class="item-stock-warning">Only {{ item.availableStock }} left in stock</div>
+          }
+        </div>
+
+        <p-inputnumber [ngModel]="item.quantity" (ngModelChange)="updateQuantity(item, $event)"
+                       [min]="1" [max]="item.availableStock" [showButtons]="true" />
+
+        <div class="item-line-total">{{ item.lineTotal | number: '1.2-2' }}</div>
+
+        <button type="button" class="item-remove" (click)="removeItem(item)" title="Remove">
+          <i class="pi pi-trash"></i>
+        </button>
+      </div>
+    }
+  </div>
+
+  <div class="cart-summary">
+    <div class="cart-subtotal">
+      <span>Subtotal</span>
+      <strong>{{ cart().subtotal | number: '1.2-2' }} {{ cart().currency }}</strong>
+    </div>
+    <p-button label="Proceed to Checkout" [disabled]="true" styleClass="checkout-button" />
+    <p class="checkout-note">Checkout is coming in the next phase.</p>
+  </div>
+}

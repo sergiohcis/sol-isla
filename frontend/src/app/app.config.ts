@@ -8,6 +8,7 @@ import { routes } from './app.routes';
 import { SolIslaPreset } from './theme';
 import { CurrentUserService } from './core/auth/current-user.service';
 import { sessionExpiredInterceptor } from './core/auth/session-expired.interceptor';
+import { CartService } from './core/services/cart.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -18,6 +19,7 @@ export const appConfig: ApplicationConfig = {
     // Spring Security's CookieCsrfTokenRepository defaults on the backend.
     provideHttpClient(withXsrfConfiguration({}), withInterceptors([sessionExpiredInterceptor])),
     provideAppInitializer(() => inject(CurrentUserService).restoreSession()),
+    provideAppInitializer(() => inject(CartService).refresh()),
     providePrimeNG({
       theme: {
         preset: SolIslaPreset,

@@ -2,7 +2,12 @@
   <header class="public-header">
     <a routerLink="/" class="public-brand">Sol Isla</a>
     <nav class="public-nav">
-      <a routerLink="/cart"><i class="pi pi-shopping-cart"></i></a>
+      <a routerLink="/cart" class="cart-link">
+        <i class="pi pi-shopping-cart"></i>
+        @if (cartQuantity() > 0) {
+          <span class="cart-badge">{{ cartQuantity() }}</span>
+        }
+      </a>
     </nav>
   </header>
 

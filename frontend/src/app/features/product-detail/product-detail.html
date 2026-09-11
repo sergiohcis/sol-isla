@@ -43,9 +43,10 @@
       }
 
       <div class="add-to-cart-row">
-        <p-inputnumber [(ngModel)]="quantity" [min]="1" [max]="p.stockQuantity" [showButtons]="true" />
-        <p-button label="Add to Cart" [disabled]="true" pTooltip="Cart coming in a later phase" />
+        <p-inputnumber [(ngModel)]="quantity" [min]="1" [max]="p.stockQuantity" [showButtons]="true" [disabled]="p.stockQuantity === 0" />
+        <p-button label="Add to Cart" [loading]="addingToCart()" [disabled]="p.stockQuantity === 0" (onClick)="addToCart()" />
       </div>
     </div>
   </div>
+  <p-toast />
 }

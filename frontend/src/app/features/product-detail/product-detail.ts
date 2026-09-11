@@ -4,24 +4,30 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Button } from 'primeng/button';
 import { InputNumber } from 'primeng/inputnumber';
-import { Tooltip } from 'primeng/tooltip';
+import { MessageService } from 'primeng/api';
+import { Toast } from 'primeng/toast';
 import { Product } from '../../core/models/product.model';
 import { ProductService } from '../../core/services/product.service';
+import { CartService } from '../../core/services/cart.service';
 
 @Component({
   selector: 'app-product-detail',
-  imports: [FormsModule, RouterLink, Button, InputNumber, Tooltip, DecimalPipe],
+  imports: [FormsModule, RouterLink, Button, InputNumber, Toast, DecimalPipe],
+  providers: [MessageService],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss',
 })
 export class ProductDetail implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly productService = inject(ProductService);
+  private readonly cartService = inject(CartService);
+  private readonly messageService = inject(MessageService);
 
   readonly product = signal<Product | null>(null);
   readonly loading = signal(true);
   readonly notFound = signal(false);
   readonly activeImageIndex = signal(0);
+  readonly addingToCart = signal(false);
   quantity = 1;
 
   ngOnInit(): void {
@@ -45,5 +51,23 @@ export class ProductDetail implements OnInit {
 
   selectImage(index: number): void {
     this.activeImageIndex.set(index);
+  }
+
+  addToCart(): void {
+    const product = this.product();
+    if (!product) {
+      return;
+    }
+    this.addingToCart.set(true);
+    this.cartService.addItem(product.id, this.quantity).subscribe({
+      next: () => {
+        this.addingToCart.set(false);
+        this.messageService.add({ severity: 'success', summary: 'Added to cart' });
+      },
+      error: (err) => {
+        this.addingToCart.set(false);
+        this.messageService.add({ severity: 'error', summary: 'Could not add to cart', detail: err.error?.detail });
+      },
+    });
   }
 }
