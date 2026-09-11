@@ -1,0 +1,75 @@
+<p-toast />
+
+<div class="categories-header">
+  <h1>Categories</h1>
+  <p-button label="New Category" icon="pi pi-plus" (onClick)="openCreate()" />
+</div>
+
+<p-table [value]="categories()" [loading]="loading()" dataKey="id" responsiveLayout="scroll">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Name</th>
+      <th>Slug</th>
+      <th>Parent</th>
+      <th>Sort</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-category>
+    <tr>
+      <td>{{ category.name }}</td>
+      <td>{{ category.slug }}</td>
+      <td>{{ parentName(category.parentId) }}</td>
+      <td>{{ category.sortOrder }}</td>
+      <td>
+        <p-tag [value]="category.active ? 'Active' : 'Inactive'" [severity]="category.active ? 'success' : 'secondary'" />
+      </td>
+      <td>
+        <p-button icon="pi pi-pencil" severity="secondary" [text]="true" (onClick)="openEdit(category)" />
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="6">No categories yet.</td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<p-dialog header="{{ editingId() ? 'Edit Category' : 'New Category' }}" [(visible)]="dialogVisible" [modal]="true" [style]="{ width: '28rem' }">
+  <div class="category-form">
+    <label for="category-name">Name *</label>
+    <input id="category-name" pInputText [(ngModel)]="form.name" name="name" />
+
+    <label for="category-description">Description</label>
+    <textarea id="category-description" pTextarea [(ngModel)]="form.description" name="description" rows="3"></textarea>
+
+    <label for="category-parent">Parent category</label>
+    <p-select
+      id="category-parent"
+      [options]="otherCategories"
+      optionLabel="name"
+      optionValue="id"
+      [(ngModel)]="form.parentId"
+      name="parentId"
+      [showClear]="true"
+      placeholder="None (top-level)"
+    />
+
+    <label for="category-sort">Sort order</label>
+    <p-inputnumber id="category-sort" [(ngModel)]="form.sortOrder" name="sortOrder" />
+
+    @if (editingId()) {
+      <div class="category-active-row">
+        <label for="category-active">Active</label>
+        <p-toggleswitch id="category-active" [(ngModel)]="form.active" name="active" />
+      </div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="dialogVisible.set(false)" />
+    <p-button label="Save" [loading]="saving()" [disabled]="!form.name" (onClick)="save()" />
+  </ng-template>
+</p-dialog>

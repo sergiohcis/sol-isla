@@ -12,6 +12,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Orders', path: '/admin/orders', icon: 'pi pi-shopping-bag' },
   { label: 'Products', path: '/admin/products', icon: 'pi pi-box' },
+  { label: 'Categories', path: '/admin/categories', icon: 'pi pi-tags' },
 ];
 
 /** Persistent chrome (sidebar nav + topbar) wrapping every authenticated admin route. The

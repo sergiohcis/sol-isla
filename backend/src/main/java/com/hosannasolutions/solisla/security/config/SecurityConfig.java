@@ -42,9 +42,10 @@ public class SecurityConfig {
     /** Guest-accessible storefront API surface — no admin data, no customer accounts. */
     private static final String[] PUBLIC_API_MATCHERS = {
             "/api/auth/login", "/api/auth/me",
-            "/api/catalog/**", "/api/categories/**",
+            "/api/products/**", "/api/categories/**",
             "/api/cart/**", "/api/checkout/**",
-            "/api/orders/track/**"
+            "/api/orders/track/**",
+            "/media/**"
     };
 
     @Bean

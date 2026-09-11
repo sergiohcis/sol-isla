@@ -1,0 +1,51 @@
+@if (loading()) {
+  <p class="state-message">Loading...</p>
+} @else if (notFound()) {
+  <p class="state-message">Product not found. <a routerLink="/">Back to catalog</a></p>
+} @else if (product(); as p) {
+  <a routerLink="/" class="back-link"><i class="pi pi-arrow-left"></i> Back</a>
+
+  <div class="product-detail">
+    <div class="gallery">
+      @if (p.images.length > 0) {
+        <img class="main-image" [src]="p.images[activeImageIndex()].url" [alt]="p.images[activeImageIndex()].altText ?? p.name" />
+        @if (p.images.length > 1) {
+          <div class="thumbnails">
+            @for (image of p.images; track image.id; let i = $index) {
+              <img [src]="image.url" [alt]="image.altText ?? p.name" [class.active]="i === activeImageIndex()" (click)="selectImage(i)" />
+            }
+          </div>
+        }
+      } @else {
+        <div class="main-image placeholder"></div>
+      }
+    </div>
+
+    <div class="details">
+      <div class="category-label">{{ p.category.name }}</div>
+      <h1>{{ p.name }}</h1>
+
+      <div class="price-row">
+        @if (p.effectivePrice !== p.basePrice) {
+          <span class="strike">{{ p.basePrice | number: '1.2-2' }}</span>
+        }
+        <span class="price">{{ p.effectivePrice | number: '1.2-2' }} {{ p.currency }}</span>
+      </div>
+
+      @if (p.description) {
+        <p class="description">{{ p.description }}</p>
+      }
+
+      @if (p.stockQuantity > 0) {
+        <p class="stock in-stock">In stock</p>
+      } @else {
+        <p class="stock out-of-stock">Out of stock</p>
+      }
+
+      <div class="add-to-cart-row">
+        <p-inputnumber [(ngModel)]="quantity" [min]="1" [max]="p.stockQuantity" [showButtons]="true" />
+        <p-button label="Add to Cart" [disabled]="true" pTooltip="Cart coming in a later phase" />
+      </div>
+    </div>
+  </div>
+}

@@ -4,13 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-Phase 1 (Foundation) is scaffolded: Spring Boot backend, Angular frontend, and the IIS
-deployment infra exist. Their tooling/conventions deliberately mirror the sibling
-`SweetHome` project (same shared Windows Server, same credentials, same non-Docker/
-session-cookie/Flyway/embedded-postgres-for-tests choices) — see
-`infrastructure/iis/README.md` for the deployment shape. Catalog, cart, checkout,
-payments, WhatsApp, etc. (Phases 2+) are not yet implemented; their backend packages
-exist only as empty `package-info.java` stubs to keep module boundaries in place.
+Phase 1 (Foundation) and Phase 2 (Catalog) are implemented. Phase 1: Spring Boot backend,
+Angular frontend, and the IIS deployment infra, with tooling/conventions that
+deliberately mirror the sibling `SweetHome` project (same shared Windows Server, same
+credentials, same non-Docker/session-cookie/Flyway/embedded-postgres-for-tests choices)
+— see `infrastructure/iis/README.md` for the deployment shape. Phase 2: categories
+(flat, `parent_id` ready for hierarchy later), products (SKU/slug uniqueness, DRAFT ->
+ACTIVE/ARCHIVED -> INACTIVE/ARCHIVED -> ARCHIVED status machine), product images (local
+filesystem storage under `sol-isla.storage.local-path`, served at `/media/**`), server-
+side discount pricing (`catalog/pricing/ProductPricingService` — the only place
+effective price is computed, reused by checkout later), and inventory as an explicit
+ledger (`inventory_movements`, not just a counter) with an admin stock-adjust endpoint.
+Public search/listing lives at `/api/products` (ACTIVE only); admin CRUD + image upload
++ inventory adjust live under `/api/admin/**`, gated by `@PreAuthorize` permissions
+(`PRODUCT_*`, `CATEGORY_*`, `INVENTORY_*` in `security/authorization/Permission.java`).
+Cart, checkout, payments, WhatsApp, etc. (Phases 3+) are not yet implemented; their
+backend packages exist only as empty `package-info.java` stubs to keep module
+boundaries in place. The public product-detail page has a disabled "Add to Cart"
+button — intentionally inert until Phase 3 wires up the cart.
 
 Build/test/run:
 

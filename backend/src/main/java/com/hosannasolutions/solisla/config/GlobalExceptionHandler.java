@@ -1,5 +1,13 @@
 package com.hosannasolutions.solisla.config;
 
+import com.hosannasolutions.solisla.catalog.exception.DuplicateSkuException;
+import com.hosannasolutions.solisla.catalog.exception.InvalidProductStatusTransitionException;
+import com.hosannasolutions.solisla.catalog.exception.ProductImageNotFoundException;
+import com.hosannasolutions.solisla.catalog.exception.ProductNotFoundException;
+import com.hosannasolutions.solisla.category.exception.CategoryNotFoundException;
+import com.hosannasolutions.solisla.common.storage.FileStorageException;
+import com.hosannasolutions.solisla.inventory.exception.InsufficientStockException;
+import com.hosannasolutions.solisla.inventory.exception.InventoryNotFoundException;
 import com.hosannasolutions.solisla.user.exception.DuplicateUserEmailException;
 import com.hosannasolutions.solisla.user.exception.UserNotFoundException;
 import java.util.stream.Collectors;
@@ -24,17 +32,29 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler({
-            UserNotFoundException.class
+            UserNotFoundException.class,
+            CategoryNotFoundException.class,
+            ProductNotFoundException.class,
+            ProductImageNotFoundException.class,
+            InventoryNotFoundException.class
     })
     public ProblemDetail handleNotFound(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler({
-            DuplicateUserEmailException.class
+            DuplicateUserEmailException.class,
+            DuplicateSkuException.class,
+            InvalidProductStatusTransitionException.class,
+            InsufficientStockException.class
     })
     public ProblemDetail handleConflict(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(FileStorageException.class)
+    public ProblemDetail handleFileStorage(FileStorageException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

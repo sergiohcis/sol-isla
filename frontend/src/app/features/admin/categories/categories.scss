@@ -1,0 +1,30 @@
+.categories-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+
+  h1 {
+    font-size: 1.25rem;
+    margin: 0;
+  }
+}
+
+.category-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+  }
+}
+
+.category-active-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}

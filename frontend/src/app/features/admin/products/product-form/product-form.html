@@ -1,0 +1,119 @@
+<p-toast />
+
+<div class="form-header">
+  <a routerLink="/admin/products" class="back-link"><i class="pi pi-arrow-left"></i> Products</a>
+  <h1>{{ isEditMode ? 'Edit Product' : 'New Product' }}</h1>
+  @if (product(); as p) {
+    <p-tag [value]="p.status" />
+  }
+</div>
+
+<div class="product-form-grid">
+  <section class="product-form-main">
+    <label for="p-name">Name *</label>
+    <input id="p-name" pInputText [(ngModel)]="form.name" name="name" />
+
+    <label for="p-sku">SKU *</label>
+    <input id="p-sku" pInputText [(ngModel)]="form.sku" name="sku" />
+
+    <label for="p-category">Category *</label>
+    <p-select id="p-category" [options]="categories()" optionLabel="name" optionValue="id"
+              [(ngModel)]="form.categoryId" name="categoryId" placeholder="Select a category" />
+
+    <label for="p-description">Description</label>
+    <textarea id="p-description" pTextarea [(ngModel)]="form.description" name="description" rows="4"></textarea>
+
+    <div class="form-row">
+      <div>
+        <label for="p-price">Price *</label>
+        <p-inputnumber id="p-price" [(ngModel)]="form.basePrice" name="basePrice" mode="decimal" [minFractionDigits]="2" [min]="0" />
+      </div>
+      <div>
+        <label for="p-currency">Currency *</label>
+        <input id="p-currency" pInputText [(ngModel)]="form.currency" name="currency" maxlength="3" style="text-transform: uppercase" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div>
+        <label for="p-discount-type">Discount</label>
+        <p-select id="p-discount-type" [options]="discountTypeOptions" optionLabel="label" optionValue="value"
+                  [(ngModel)]="form.discountType" name="discountType" />
+      </div>
+      @if (form.discountType !== 'NONE') {
+        <div>
+          <label for="p-discount-value">{{ form.discountType === 'PERCENTAGE' ? 'Percent off' : 'Amount off' }}</label>
+          <p-inputnumber id="p-discount-value" [(ngModel)]="form.discountValue" name="discountValue" mode="decimal" [minFractionDigits]="2" [min]="0" />
+        </div>
+      }
+    </div>
+
+    @if (form.discountType !== 'NONE') {
+      <div class="form-row">
+        <div>
+          <label for="p-discount-from">Discount starts</label>
+          <p-datepicker id="p-discount-from" [(ngModel)]="discountEffectiveFromDate" name="discountFrom" [showTime]="true" [showIcon]="true" />
+        </div>
+        <div>
+          <label for="p-discount-to">Discount ends</label>
+          <p-datepicker id="p-discount-to" [(ngModel)]="discountEffectiveToDate" name="discountTo" [showTime]="true" [showIcon]="true" />
+        </div>
+      </div>
+    }
+
+    <div class="form-row-inline">
+      <label for="p-featured">Featured</label>
+      <p-toggleswitch id="p-featured" [(ngModel)]="form.featured" name="featured" />
+    </div>
+
+    @if (!isEditMode) {
+      <label for="p-initial-stock">Initial stock quantity</label>
+      <p-inputnumber id="p-initial-stock" [(ngModel)]="initialStockQuantity" name="initialStockQuantity" [min]="0" />
+    }
+
+    <p-button label="Save" [loading]="saving()" [disabled]="!form.name || !form.sku || !form.categoryId" (onClick)="save()" />
+  </section>
+
+  @if (isEditMode && product(); as p) {
+    <section class="product-form-side">
+      <div class="side-card">
+        <h3>Status</h3>
+        <p>Current: <p-tag [value]="p.status" /></p>
+        <div class="status-actions">
+          @for (next of availableStatusTransitions; track next) {
+            <p-button [label]="'Move to ' + next" severity="secondary" size="small" (onClick)="changeStatus(next)" />
+          }
+        </div>
+      </div>
+
+      <div class="side-card">
+        <h3>Stock</h3>
+        <p>Available: <strong>{{ p.stockQuantity }}</strong></p>
+        <div class="stock-adjust">
+          <p-inputnumber [(ngModel)]="stockDelta" name="stockDelta" placeholder="+/- quantity" />
+          <input pInputText [(ngModel)]="stockReason" name="stockReason" placeholder="Reason" />
+          <p-button label="Adjust" size="small" [disabled]="stockDelta === 0 || !stockReason.trim()" (onClick)="adjustStock()" />
+        </div>
+      </div>
+
+      <div class="side-card">
+        <h3>Images</h3>
+        <div class="image-grid">
+          @for (image of p.images; track image.id) {
+            <div class="image-item" [class.primary]="image.primary">
+              <img [src]="image.url" [alt]="image.altText ?? p.name" />
+              <div class="image-actions">
+                @if (!image.primary) {
+                  <button type="button" (click)="setPrimaryImage(image.id)" title="Set as primary"><i class="pi pi-star"></i></button>
+                }
+                <button type="button" (click)="deleteImage(image.id)" title="Delete"><i class="pi pi-trash"></i></button>
+              </div>
+            </div>
+          }
+        </div>
+        <p-fileupload mode="basic" chooseLabel="Add image" accept="image/jpeg,image/png,image/webp" [maxFileSize]="5000000"
+                      [customUpload]="true" (uploadHandler)="uploadImage($event, fileUpload)" #fileUpload />
+      </div>
+    </section>
+  }
+</div>

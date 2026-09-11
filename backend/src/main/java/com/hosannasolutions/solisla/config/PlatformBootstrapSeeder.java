@@ -27,7 +27,7 @@ public class PlatformBootstrapSeeder {
 
     /** Returns the generated temporary password only the first time the account is created —
      *  empty on a re-run against an already-bootstrapped instance, since the real password hash
-     *  is never re-readable. */
+     *  is never re-readable. *///8G3hbJSWFqns9Qm4
     @Transactional
     public Optional<String> seed() {
         if (userService.findByEmail(OWNER_EMAIL).isPresent()) {

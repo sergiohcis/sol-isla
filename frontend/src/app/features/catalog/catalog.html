@@ -1,0 +1,48 @@
+<div class="catalog-search">
+  <input pInputText placeholder="Search products..." [(ngModel)]="q" (keyup.enter)="search()" />
+</div>
+
+<div class="category-chips">
+  <button type="button" class="chip" [class.active]="!selectedCategorySlug" (click)="selectCategory(null)">All</button>
+  @for (category of categories(); track category.id) {
+    <button type="button" class="chip" [class.active]="selectedCategorySlug === category.slug" (click)="selectCategory(category.slug)">
+      {{ category.name }}
+    </button>
+  }
+</div>
+
+@if (loading()) {
+  <div class="product-grid">
+    @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+      <p-skeleton height="220px" />
+    }
+  </div>
+} @else if (products().length === 0) {
+  <p class="empty-state">No products found.</p>
+} @else {
+  <div class="product-grid">
+    @for (product of products(); track product.id) {
+      <a class="product-card" [routerLink]="['/products', product.slug]">
+        <div class="product-image">
+          @if (product.primaryImageUrl) {
+            <img [src]="product.primaryImageUrl" [alt]="product.name" loading="lazy" />
+          } @else {
+            <div class="product-image-placeholder"></div>
+          }
+          @if (product.featured) {
+            <span class="badge">Featured</span>
+          }
+        </div>
+        <div class="product-name">{{ product.name }}</div>
+        <div class="product-price">
+          @if (product.effectivePrice !== product.basePrice) {
+            <span class="strike">{{ product.basePrice | number: '1.2-2' }}</span>
+          }
+          <span class="price">{{ product.effectivePrice | number: '1.2-2' }} {{ product.currency }}</span>
+        </div>
+      </a>
+    }
+  </div>
+
+  <p-paginator [rows]="pageSize" [totalRecords]="totalRecords()" (onPageChange)="onPageChange($event)" />
+}
