@@ -4,8 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-Phase 1 (Foundation), Phase 2 (Catalog), Phase 3 (Cart), and Phase 4 (Checkout) are
-implemented. Phase 1: Spring Boot backend,
+Phase 1 (Foundation), Phase 2 (Catalog), Phase 3 (Cart), Phase 4 (Checkout), and Phase 5
+(WhatsApp) are implemented. Phase 1: Spring Boot backend,
 Angular frontend, and the IIS deployment infra, with tooling/conventions that
 deliberately mirror the sibling `SweetHome` project (same shared Windows Server, same
 credentials, same non-Docker/session-cookie/Flyway/embedded-postgres-for-tests choices)
@@ -44,11 +44,27 @@ concurrent checkouts. `DeliveryZone` (flat fee per zone, `/api/delivery/zones` p
 admin UI for zones yet, only the API; seed one via the admin API or build the UI
 whenever it's actually needed. `GET /api/orders/track/{orderNumber}` is the public
 order-lookup the order-confirmation page uses, with no additional secret beyond the
-order number itself (design doc §53). Payments, admin order management, and the actual
-WhatsApp send (Phase 5+) are not yet implemented; their backend packages exist only as
-empty `package-info.java` stubs. `PaymentStatus` starts `PENDING` for both `CARD` and
-`CASH_ON_DELIVERY` — real card-provider integration (CLAUDE.md rule 8: only a webhook
-may set `PAID`) is Phase 7.
+order number itself (design doc §53). `PaymentStatus` starts `PENDING` for both `CARD`
+and `CASH_ON_DELIVERY` — real card-provider integration (CLAUDE.md rule 8: only a
+webhook may set `PAID`) is Phase 7.
+
+Phase 5: `OutboxWorker` (`@Scheduled`, every 30s) is the only thing that calls the
+WhatsApp Business Cloud API — `WhatsAppServiceImpl` posts to the Meta Graph API and
+always renders the message fresh from the current `Order`/`OrderItem` rows at send
+time, never from the outbox row's stored payload (design doc §21: never trust a
+client-generated or stale message). Processing one row is its own
+`@Transactional` method on a *separate* bean (`OutboxProcessingService`) from the
+`@Scheduled` caller (`OutboxWorker`) — calling a `@Transactional` method on `this`
+bypasses the Spring AOP proxy entirely, so this split isn't optional. Failed sends get
+exponential backoff (`MessageOutbox.recordRetryableFailure`, status stays `PENDING`
+with `next_attempt_at` pushed out) up to 5 attempts, then `FAILED` terminally — nothing
+auto-requeues a terminally-failed row. `WhatsAppService.isConfigured()` gates the
+worker before it ever touches the database: `sol-isla.whatsapp.*` is empty by default
+(same as this dev environment), so out of the box every outbox row just sits `PENDING`
+indefinitely rather than burning through retries against credentials that will never
+work — confirmed live against the running dev server, not just in tests. Admin order
+management and the real card-payment provider (Phase 6+) are not yet implemented; their
+backend packages exist only as empty `package-info.java` stubs.
 
 Testing note: Phase 2 shipped a real bug (`/api/products` 401ing on empty filters — see
 git history) that only surfaced testing against a live server, because no test actually

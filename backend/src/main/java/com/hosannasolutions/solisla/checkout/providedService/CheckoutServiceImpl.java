@@ -157,6 +157,7 @@ public class CheckoutServiceImpl implements CheckoutService {
         messageOutboxRepository.save(new MessageOutbox(
                 "Order", order.getId(), "ORDER_CREATED", "{\"orderId\":\"" + order.getId() + "\"}"));
         auditService.record(AuditEventRequest.of(AuditAction.ORDER_CREATED, null, "Order", order.getId()));
+        auditService.record(AuditEventRequest.of(AuditAction.WHATSAPP_MESSAGE_QUEUED, null, "Order", order.getId()));
 
         return OrderResponse.from(order, itemResponses);
     }

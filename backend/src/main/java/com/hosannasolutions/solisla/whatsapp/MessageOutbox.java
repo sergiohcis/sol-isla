@@ -74,6 +74,41 @@ public class MessageOutbox {
         this.createdAt = Instant.now();
     }
 
+    public void markProcessing() {
+        this.status = MessageOutboxStatus.PROCESSING;
+    }
+
+    public void markSent() {
+        this.status = MessageOutboxStatus.SENT;
+        this.sentAt = Instant.now();
+        this.lastError = null;
+    }
+
+    /** Records a failed attempt and schedules a retry — status goes back to {@code PENDING}
+     *  (not a distinct "retrying" state) since the design doc's four-value status vocabulary
+     *  treats PENDING as "will be attempted", including reattempts. */
+    public void recordRetryableFailure(String error, Instant nextAttemptAt) {
+        this.attemptCount++;
+        this.lastError = truncate(error);
+        this.nextAttemptAt = nextAttemptAt;
+        this.status = MessageOutboxStatus.PENDING;
+    }
+
+    /** Terminal — max attempts exhausted. An operator can requeue manually if needed; nothing
+     *  does so automatically in Phase 5. */
+    public void markPermanentlyFailed(String error) {
+        this.attemptCount++;
+        this.lastError = truncate(error);
+        this.status = MessageOutboxStatus.FAILED;
+    }
+
+    private static String truncate(String error) {
+        if (error == null) {
+            return null;
+        }
+        return error.length() > 1000 ? error.substring(0, 1000) : error;
+    }
+
     public UUID getId() {
         return id;
     }
