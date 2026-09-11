@@ -42,7 +42,6 @@
       <span>Subtotal</span>
       <strong>{{ cart().subtotal | number: '1.2-2' }} {{ cart().currency }}</strong>
     </div>
-    <p-button label="Proceed to Checkout" [disabled]="true" styleClass="checkout-button" />
-    <p class="checkout-note">Checkout is coming in the next phase.</p>
+    <p-button label="Proceed to Checkout" routerLink="/checkout" styleClass="checkout-button" />
   </div>
 }

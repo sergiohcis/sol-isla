@@ -9,14 +9,18 @@ import com.hosannasolutions.solisla.catalog.exception.InvalidProductStatusTransi
 import com.hosannasolutions.solisla.catalog.exception.ProductImageNotFoundException;
 import com.hosannasolutions.solisla.catalog.exception.ProductNotFoundException;
 import com.hosannasolutions.solisla.category.exception.CategoryNotFoundException;
+import com.hosannasolutions.solisla.checkout.exception.EmptyCartException;
 import com.hosannasolutions.solisla.common.storage.FileStorageException;
+import com.hosannasolutions.solisla.delivery.exception.DeliveryZoneNotFoundException;
 import com.hosannasolutions.solisla.inventory.exception.InsufficientStockException;
 import com.hosannasolutions.solisla.inventory.exception.InventoryNotFoundException;
+import com.hosannasolutions.solisla.order.exception.OrderNotFoundException;
 import com.hosannasolutions.solisla.user.exception.DuplicateUserEmailException;
 import com.hosannasolutions.solisla.user.exception.UserNotFoundException;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -42,7 +46,9 @@ public class GlobalExceptionHandler {
             ProductImageNotFoundException.class,
             InventoryNotFoundException.class,
             CartNotFoundException.class,
-            CartItemNotFoundException.class
+            CartItemNotFoundException.class,
+            DeliveryZoneNotFoundException.class,
+            OrderNotFoundException.class
     })
     public ProblemDetail handleNotFound(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
@@ -54,10 +60,18 @@ public class GlobalExceptionHandler {
             InvalidProductStatusTransitionException.class,
             InsufficientStockException.class,
             ProductNotAvailableException.class,
-            InvalidCartQuantityException.class
+            InvalidCartQuantityException.class,
+            EmptyCartException.class
     })
     public ProblemDetail handleConflict(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    /** A concurrent sale of the last unit during checkout (CLAUDE.md rule 4) — the loser's
+     *  transaction rolls back and lands here rather than overselling. */
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ProblemDetail handleOptimisticLocking(ObjectOptimisticLockingFailureException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Stock changed while processing your request — please try again");
     }
 
     @ExceptionHandler(FileStorageException.class)

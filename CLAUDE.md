@@ -4,7 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-Phase 1 (Foundation), Phase 2 (Catalog), and Phase 3 (Cart) are implemented. Phase 1: Spring Boot backend,
+Phase 1 (Foundation), Phase 2 (Catalog), Phase 3 (Cart), and Phase 4 (Checkout) are
+implemented. Phase 1: Spring Boot backend,
 Angular frontend, and the IIS deployment infra, with tooling/conventions that
 deliberately mirror the sibling `SweetHome` project (same shared Windows Server, same
 credentials, same non-Docker/session-cookie/Flyway/embedded-postgres-for-tests choices)
@@ -26,10 +27,28 @@ configured per-item max (`sol-isla.cart.max-quantity-per-item`) and live availab
 a cart item's ownership is checked against the requesting cookie's cart on every
 update/remove so one guest can't touch another's cart by guessing an item id. The public
 product-detail page's "Add to Cart" and the header cart badge are wired to this for real.
-Checkout, payments, WhatsApp, etc. (Phase 4+) are not yet implemented; their backend
-packages exist only as empty `package-info.java` stubs to keep module boundaries in
-place. The cart page's "Proceed to Checkout" button is present but disabled —
-intentionally inert until Phase 4 wires up checkout.
+Phase 4: `CheckoutServiceImpl` — the most important service in the codebase — does
+idempotency check -> load cart -> re-verify every product ACTIVE and in stock ->
+recompute prices live -> decrement inventory (`InventoryService.sell`, a SALE movement)
+-> create Order + immutable OrderItem snapshots -> mark the cart CONVERTED -> enqueue a
+`MessageOutbox` row, all inside one `@Transactional` boundary; no external call happens
+in it (CLAUDE.md rule 6 — the actual WhatsApp send is Phase 5, reading from that outbox
+row). `POST /api/checkout` accepts an optional `Idempotency-Key` header — a repeat with
+the same key returns the original order (looked up before touching the cart at all) —
+and a concurrent sale of the last unit surfaces as a 409 via `Inventory`'s optimistic
+lock rather than overselling (verified with a real integration test, not just reasoning
+about it — see `CheckoutControllerIT`). Order numbers come from a Postgres sequence
+(`order_number_seq`), not a "count today's orders" query, to stay race-free under
+concurrent checkouts. `DeliveryZone` (flat fee per zone, `/api/delivery/zones` public,
+`/api/admin/delivery/zones` gated by `DELIVERY_MANAGE`) supplies the delivery fee — no
+admin UI for zones yet, only the API; seed one via the admin API or build the UI
+whenever it's actually needed. `GET /api/orders/track/{orderNumber}` is the public
+order-lookup the order-confirmation page uses, with no additional secret beyond the
+order number itself (design doc §53). Payments, admin order management, and the actual
+WhatsApp send (Phase 5+) are not yet implemented; their backend packages exist only as
+empty `package-info.java` stubs. `PaymentStatus` starts `PENDING` for both `CARD` and
+`CASH_ON_DELIVERY` — real card-provider integration (CLAUDE.md rule 8: only a webhook
+may set `PAID`) is Phase 7.
 
 Testing note: Phase 2 shipped a real bug (`/api/products` 401ing on empty filters — see
 git history) that only surfaced testing against a live server, because no test actually

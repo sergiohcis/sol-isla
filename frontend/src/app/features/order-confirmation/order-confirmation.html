@@ -1,0 +1,46 @@
+@if (loading()) {
+  <p class="state-message">Loading...</p>
+} @else if (notFound()) {
+  <p class="state-message">Order not found. <a routerLink="/">Back to catalog</a></p>
+} @else if (order(); as o) {
+  <div class="confirmation">
+    <i class="pi pi-check-circle confirmation-icon"></i>
+    <h1>Order placed!</h1>
+    <p class="order-number">{{ o.orderNumber }}</p>
+    <p class="confirmation-note">
+      We've received your order and will confirm availability, final pricing, and delivery details
+      with you shortly.
+    </p>
+
+    <div class="order-details">
+      <h2>Items</h2>
+      @for (item of o.items; track item.skuSnapshot) {
+        <div class="summary-line">
+          <span>{{ item.quantity }} x {{ item.productNameSnapshot }}</span>
+          <span>{{ item.lineTotal | number: '1.2-2' }}</span>
+        </div>
+      }
+      <div class="summary-line">
+        <span>Subtotal</span>
+        <span>{{ o.subtotal | number: '1.2-2' }}</span>
+      </div>
+      <div class="summary-line">
+        <span>Delivery</span>
+        <span>{{ o.deliveryFee | number: '1.2-2' }}</span>
+      </div>
+      <div class="summary-line summary-total">
+        <span>Total</span>
+        <span>{{ o.grandTotal | number: '1.2-2' }} {{ o.currency }}</span>
+      </div>
+
+      <h2>Delivery to</h2>
+      <p>{{ o.customerName }} &middot; {{ o.customerPhone }}</p>
+      <p>{{ o.deliveryAddress }}, {{ o.deliveryCity }} @if (o.deliveryPostalCode) { {{ o.deliveryPostalCode }} }</p>
+
+      <h2>Payment</h2>
+      <p>{{ o.paymentMethod === 'CARD' ? 'Card' : 'Cash on Delivery' }} &middot; {{ o.paymentStatus }}</p>
+    </div>
+
+    <a routerLink="/" class="back-link">Continue shopping</a>
+  </div>
+}

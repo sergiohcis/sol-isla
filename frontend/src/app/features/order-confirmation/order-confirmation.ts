@@ -1,9 +1,39 @@
-import { Component } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { OrderResponse } from '../../core/models/order.model';
+import { CheckoutService } from '../../core/services/checkout.service';
 
-/** Placeholder pending the order module. */
 @Component({
   selector: 'app-order-confirmation',
-  template: `<p>Order confirmation coming soon.</p>`,
+  imports: [RouterLink, DecimalPipe],
+  templateUrl: './order-confirmation.html',
+  styleUrl: './order-confirmation.scss',
 })
-export class OrderConfirmation {
+export class OrderConfirmation implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly checkoutService = inject(CheckoutService);
+
+  readonly order = signal<OrderResponse | null>(null);
+  readonly loading = signal(true);
+  readonly notFound = signal(false);
+
+  ngOnInit(): void {
+    const orderNumber = this.route.snapshot.paramMap.get('orderNumber');
+    if (!orderNumber) {
+      this.notFound.set(true);
+      this.loading.set(false);
+      return;
+    }
+    this.checkoutService.getByOrderNumber(orderNumber).subscribe({
+      next: (order) => {
+        this.order.set(order);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.notFound.set(true);
+        this.loading.set(false);
+      },
+    });
+  }
 }

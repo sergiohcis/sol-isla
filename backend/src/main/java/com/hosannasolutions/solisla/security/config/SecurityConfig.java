@@ -44,7 +44,7 @@ public class SecurityConfig {
             "/api/auth/login", "/api/auth/me",
             "/api/products/**", "/api/categories/**",
             "/api/cart/**", "/api/checkout/**",
-            "/api/orders/track/**",
+            "/api/orders/track/**", "/api/delivery/zones",
             "/media/**"
     };
 

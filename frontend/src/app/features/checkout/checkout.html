@@ -1,0 +1,77 @@
+<h1>Checkout</h1>
+
+@if (cart().items.length === 0) {
+  <p class="empty-notice">Your cart is empty — nothing to check out.</p>
+} @else {
+  @if (error(); as message) {
+    <p-message severity="error" [text]="message" />
+  }
+
+  <div class="checkout-grid">
+    <section class="checkout-form">
+      <h2>Customer information</h2>
+      <label for="customerName">Name *</label>
+      <input id="customerName" pInputText [(ngModel)]="form.customerName" name="customerName" />
+
+      <label for="customerPhone">Phone *</label>
+      <input id="customerPhone" pInputText [(ngModel)]="form.customerPhone" name="customerPhone" />
+
+      <label for="customerEmail">Email</label>
+      <input id="customerEmail" type="email" pInputText [(ngModel)]="form.customerEmail" name="customerEmail" />
+
+      <h2>Delivery information</h2>
+      <label for="deliveryAddress">Address *</label>
+      <input id="deliveryAddress" pInputText [(ngModel)]="form.deliveryAddress" name="deliveryAddress" />
+
+      <label for="deliveryCity">City *</label>
+      <input id="deliveryCity" pInputText [(ngModel)]="form.deliveryCity" name="deliveryCity" />
+
+      <label for="deliveryPostalCode">Postal code</label>
+      <input id="deliveryPostalCode" pInputText [(ngModel)]="form.deliveryPostalCode" name="deliveryPostalCode" />
+
+      <label for="deliveryNotes">Delivery notes</label>
+      <textarea id="deliveryNotes" pTextarea [(ngModel)]="form.deliveryNotes" name="deliveryNotes" rows="2"></textarea>
+
+      <label for="deliveryZone">Delivery zone *</label>
+      <p-select id="deliveryZone" [options]="zones()" optionLabel="name" optionValue="id"
+                [(ngModel)]="form.deliveryZoneId" name="deliveryZoneId" placeholder="Select a zone" />
+
+      <h2>Payment method</h2>
+      <div class="payment-options">
+        <div class="payment-option">
+          <p-radiobutton name="paymentMethod" value="CASH_ON_DELIVERY" [(ngModel)]="form.paymentMethod" inputId="pm-cod" />
+          <label for="pm-cod">Cash on Delivery</label>
+        </div>
+        <div class="payment-option">
+          <p-radiobutton name="paymentMethod" value="CARD" [(ngModel)]="form.paymentMethod" inputId="pm-card" />
+          <label for="pm-card">Card</label>
+        </div>
+      </div>
+
+      <p-button label="Place Order" [loading]="submitting()" [disabled]="!formValid" (onClick)="submit()" styleClass="place-order-button" />
+    </section>
+
+    <aside class="checkout-summary">
+      <h2>Order summary</h2>
+      @for (item of cart().items; track item.id) {
+        <div class="summary-line">
+          <span>{{ item.quantity }} x {{ item.productName }}</span>
+          <span>{{ item.lineTotal | number: '1.2-2' }}</span>
+        </div>
+      }
+      <div class="summary-line">
+        <span>Subtotal</span>
+        <span>{{ cart().subtotal | number: '1.2-2' }}</span>
+      </div>
+      <div class="summary-line">
+        <span>Delivery</span>
+        <span>{{ selectedZoneFee | number: '1.2-2' }}</span>
+      </div>
+      <div class="summary-line summary-total">
+        <span>Estimated total</span>
+        <span>{{ estimatedTotal | number: '1.2-2' }} {{ cart().currency }}</span>
+      </div>
+      <p class="summary-note">Final total is confirmed by the business.</p>
+    </aside>
+  </div>
+}

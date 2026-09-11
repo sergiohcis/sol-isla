@@ -76,4 +76,22 @@ public class InventoryServiceImpl implements InventoryService {
         auditService.record(AuditEventRequest.of(AuditAction.INVENTORY_ADJUSTED, actingUserId, "Product", productId));
         return inventory;
     }
+
+    @Override
+    @Transactional
+    public Inventory sell(UUID productId, int quantity, UUID orderId, UUID actingUserId) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Sale quantity must be positive");
+        }
+        Inventory inventory = getByProductId(productId);
+        try {
+            inventory.applyDelta(-quantity);
+        } catch (IllegalStateException e) {
+            throw new InsufficientStockException(
+                    "Cannot sell " + quantity + ": only " + inventory.getAvailableQuantity() + " available");
+        }
+        movementRepository.save(new InventoryMovement(
+                productId, InventoryMovementType.SALE, -quantity, "Order", orderId, "Checkout", actingUserId));
+        return inventory;
+    }
 }

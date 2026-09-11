@@ -20,4 +20,11 @@ public interface InventoryService {
     Map<UUID, Integer> availableQuantitiesOrZero(List<UUID> productIds);
 
     Inventory adjust(UUID productId, int delta, String reason, UUID actingUserId);
+
+    /** Called from within the checkout transaction (design doc §19 step 12) — decrements stock
+     *  and records a SALE movement referencing the order. Optimistic locking on {@code Inventory}
+     *  means a concurrent sale of the last unit surfaces as an
+     *  {@code ObjectOptimisticLockingFailureException} here, letting the whole checkout
+     *  transaction roll back rather than silently overselling (CLAUDE.md rule 4). */
+    Inventory sell(UUID productId, int quantity, UUID orderId, UUID actingUserId);
 }

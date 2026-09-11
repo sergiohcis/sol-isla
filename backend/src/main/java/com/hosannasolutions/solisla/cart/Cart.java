@@ -75,6 +75,14 @@ public class Cart {
         }
     }
 
+    /** Called by checkout once the order is created — a converted cart is permanently done;
+     *  {@code CartServiceImpl} only ever looks up {@code ACTIVE} carts, so the old cart cookie
+     *  naturally reads back empty afterward without any explicit cleanup. */
+    public void markConverted() {
+        this.status = CartStatus.CONVERTED;
+        this.updatedAt = Instant.now();
+    }
+
     public boolean isExpired() {
         return Instant.now().isAfter(expiresAt);
     }
