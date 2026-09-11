@@ -18,11 +18,11 @@
   </ng-template>
   <ng-template pTemplate="body" let-category>
     <tr>
-      <td>{{ category.name }}</td>
-      <td>{{ category.slug }}</td>
-      <td>{{ parentName(category.parentId) }}</td>
-      <td>{{ category.sortOrder }}</td>
-      <td>
+      <td data-label="Name">{{ category.name }}</td>
+      <td data-label="Slug">{{ category.slug }}</td>
+      <td data-label="Parent">{{ parentName(category.parentId) }}</td>
+      <td data-label="Sort">{{ category.sortOrder }}</td>
+      <td data-label="Status">
         <p-tag [value]="category.active ? 'Active' : 'Inactive'" [severity]="category.active ? 'success' : 'secondary'" />
       </td>
       <td>

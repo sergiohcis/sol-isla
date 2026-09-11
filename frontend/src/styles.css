@@ -46,3 +46,53 @@ body {
 .p-datatable .p-datatable-tbody > tr:hover {
   background: #f9fafb;
 }
+
+/* Below 768px, stack each row as a card instead of forcing horizontal scroll —
+   the admin is regularly used from a phone. Templates opt in by adding
+   [attr.data-label] to each <td> matching its header text; a <td> with no
+   data-label (e.g. a full-width actions cell) simply spans the card. */
+@media (max-width: 767px) {
+  .p-datatable .p-datatable-thead {
+    display: none;
+  }
+
+  .p-datatable .p-datatable-table,
+  .p-datatable .p-datatable-tbody,
+  .p-datatable .p-datatable-tbody > tr,
+  .p-datatable .p-datatable-tbody > tr > td {
+    display: block;
+    width: 100%;
+  }
+
+  .p-datatable .p-datatable-tbody > tr {
+    padding: 0.75rem 0.9rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+  }
+
+  .p-datatable .p-datatable-tbody > tr > td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.4rem 0;
+    border: none;
+    text-align: right;
+  }
+
+  .p-datatable .p-datatable-tbody > tr > td[data-label]::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+    text-align: left;
+    margin-right: auto;
+  }
+
+  .p-datatable .p-datatable-tbody > tr > td:not([data-label]) {
+    justify-content: flex-end;
+  }
+}

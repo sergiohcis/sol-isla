@@ -1,3 +1,6 @@
+$breakpoint: 768px;
+$tabbar-height: 60px;
+
 .admin-layout {
   display: flex;
   min-height: 100vh;
@@ -10,6 +13,10 @@
   color: #fff;
   display: flex;
   flex-direction: column;
+}
+
+.admin-sidebar-user {
+  display: none;
 }
 
 .admin-brand {
@@ -45,6 +52,22 @@
   }
 }
 
+.admin-sidebar-logout {
+  display: none;
+}
+
+.admin-hamburger {
+  display: none;
+}
+
+.admin-backdrop {
+  display: none;
+}
+
+.admin-tabbar {
+  display: none;
+}
+
 .admin-body {
   flex: 1;
   display: flex;
@@ -70,4 +93,125 @@
 .admin-content {
   flex: 1;
   padding: 1.5rem;
+}
+
+@media (max-width: #{$breakpoint - 1px}) {
+  .admin-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 40;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease-out;
+
+    &.open {
+      transform: translateX(0);
+    }
+  }
+
+  .admin-sidebar-user {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0 1rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 0.5rem;
+  }
+
+  .admin-user-email {
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .admin-user-role {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .admin-sidebar-logout {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-top: auto;
+  }
+
+  .admin-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 30;
+  }
+
+  .admin-hamburger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    background: none;
+    border: none;
+    font-size: 1.15rem;
+    color: #1f2937;
+    cursor: pointer;
+    margin-right: auto;
+  }
+
+  .admin-topbar {
+    justify-content: flex-start;
+    padding: 0.75rem 1rem;
+  }
+
+  .admin-user {
+    display: none;
+  }
+
+  .admin-logout-desktop {
+    display: none;
+  }
+
+  .admin-content {
+    padding: 1rem;
+    padding-bottom: calc(1rem + #{$tabbar-height});
+  }
+
+  .admin-tabbar {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: $tabbar-height;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    z-index: 20;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .admin-tabbar-link {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 0.7rem;
+
+    i {
+      font-size: 1.1rem;
+    }
+
+    &.active {
+      color: var(--p-primary-color, #6366f1);
+    }
+  }
 }

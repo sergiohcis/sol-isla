@@ -27,21 +27,21 @@
   </ng-template>
   <ng-template pTemplate="body" let-product>
     <tr>
-      <td>
+      <td data-label="Product">
         <a [routerLink]="['/admin/products', product.id, 'edit']">{{ product.name }}</a>
         @if (product.featured) {
           <p-tag value="Featured" severity="info" />
         }
       </td>
-      <td>{{ product.sku }}</td>
-      <td>{{ product.categoryName }}</td>
-      <td>
+      <td data-label="SKU">{{ product.sku }}</td>
+      <td data-label="Category">{{ product.categoryName }}</td>
+      <td data-label="Price">
         @if (product.effectivePrice !== product.basePrice) {
           <span class="strike">{{ product.basePrice | number: '1.2-2' }}</span>
         }
         {{ product.effectivePrice | number: '1.2-2' }} {{ product.currency }}
       </td>
-      <td>
+      <td data-label="Status">
         <p-tag [value]="product.status" [severity]="severityFor(product.status)" />
       </td>
       <td>

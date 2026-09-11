@@ -31,6 +31,35 @@ h1 {
   align-items: center;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--p-content-border-color, #eee);
+
+  @media (max-width: 480px) {
+    grid-template-columns: 56px 1fr auto;
+    grid-template-areas:
+      'image details remove'
+      'qty qty total';
+    row-gap: 0.5rem;
+
+    .item-image {
+      grid-area: image;
+    }
+
+    .item-details {
+      grid-area: details;
+    }
+
+    .item-remove {
+      grid-area: remove;
+    }
+
+    p-inputnumber {
+      grid-area: qty;
+    }
+
+    .item-line-total {
+      grid-area: total;
+      text-align: right;
+    }
+  }
 }
 
 .item-image {

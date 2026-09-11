@@ -50,6 +50,10 @@
     flex-direction: column;
     gap: 0.35rem;
   }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .form-row-inline {

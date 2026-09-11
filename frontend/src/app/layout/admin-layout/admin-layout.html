@@ -1,6 +1,14 @@
 <div class="admin-layout">
-  <aside class="admin-sidebar">
+  <aside class="admin-sidebar" [class.open]="drawerOpen()">
     <div class="admin-brand">Sol Isla Admin</div>
+
+    @if (currentUser(); as user) {
+      <div class="admin-sidebar-user">
+        <span class="admin-user-email">{{ user.email }}</span>
+        <span class="admin-user-role">{{ user.role }}</span>
+      </div>
+    }
+
     <nav class="admin-nav">
       @for (item of navItems; track item.path) {
         <a [routerLink]="item.path" routerLinkActive="active" class="admin-nav-link">
@@ -9,18 +17,40 @@
         </a>
       }
     </nav>
+
+    <button type="button" class="admin-sidebar-logout" (click)="logout()">
+      <i class="pi pi-sign-out"></i>
+      <span>Log out</span>
+    </button>
   </aside>
+
+  @if (drawerOpen()) {
+    <div class="admin-backdrop" (click)="closeDrawer()"></div>
+  }
 
   <div class="admin-body">
     <header class="admin-topbar">
+      <button type="button" class="admin-hamburger" (click)="toggleDrawer()" aria-label="Open menu">
+        <i class="pi pi-bars"></i>
+      </button>
+
       @if (currentUser(); as user) {
         <span class="admin-user">{{ user.email }} &middot; {{ user.role }}</span>
       }
-      <p-button label="Log out" severity="secondary" (onClick)="logout()" />
+      <p-button class="admin-logout-desktop" label="Log out" severity="secondary" (onClick)="logout()" />
     </header>
 
     <main class="admin-content">
       <router-outlet />
     </main>
+
+    <nav class="admin-tabbar">
+      @for (item of navItems; track item.path) {
+        <a [routerLink]="item.path" routerLinkActive="active" class="admin-tabbar-link">
+          <i [class]="item.icon"></i>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
   </div>
 </div>
