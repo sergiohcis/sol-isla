@@ -1,0 +1,37 @@
+<!--
+  WinSW (https://github.com/winsw/winsw) service definition for running the Spring Boot
+  backend as a Windows Service, deployed alongside a WinSW executable renamed to match this
+  file's base name (e.g. SolIslaBackend.exe / SolIslaBackend.xml in the same directory).
+
+  This is a TEMPLATE: copy it to SolIslaBackend.xml next to the WinSW executable and the
+  backend jar, then fill in the real DB_PASSWORD. Per CLAUDE.md, prod database credentials are
+  never checked into the repo — only this placeholder template is.
+
+  Deployed at: C:\inetpub\wwwroot\sol-isla\backend
+
+  Port 6003 (not SweetHome's 6002) — this is the same shared Windows Server, so the two
+  backends must not collide. Confirm 6003 is actually free before first deploy.
+-->
+<service>
+  <id>SolIslaBackend</id>
+  <name>Sol Isla Backend</name>
+  <description>Sol Isla Spring Boot backend</description>
+  <executable>C:\Program Files\Amazon Corretto\jdk25.0.2_10\bin\java.exe</executable>
+  <arguments>-jar "%BASE%\backend-0.0.1-SNAPSHOT.jar" --server.port=6003</arguments>
+  <env name="DB_HOST" value="localhost"/>
+  <env name="DB_PORT" value="5433"/>
+  <env name="DB_NAME" value="sol_isla_prod"/>
+  <env name="DB_USER" value="postgres"/>
+  <env name="DB_PASSWORD" value="__FILL_IN_AT_DEPLOY_TIME__"/>
+  <env name="WHATSAPP_PHONE_NUMBER_ID" value="__FILL_IN_AT_DEPLOY_TIME__"/>
+  <env name="WHATSAPP_ACCESS_TOKEN" value="__FILL_IN_AT_DEPLOY_TIME__"/>
+  <env name="WHATSAPP_BUSINESS_RECIPIENT" value="__FILL_IN_AT_DEPLOY_TIME__"/>
+  <logpath>%BASE%\logs</logpath>
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>8</keepFiles>
+  </log>
+  <workingdirectory>%BASE%</workingdirectory>
+  <startmode>Automatic</startmode>
+  <onfailure action="restart" delay="10 sec"/>
+</service>

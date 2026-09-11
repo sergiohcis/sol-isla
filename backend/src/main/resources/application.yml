@@ -1,0 +1,33 @@
+server:
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: SolIslaBackend
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:sol_isla}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 25MB
+
+sol-isla:
+  storage:
+    local-path: ${STORAGE_PATH:./storage}
+  whatsapp:
+    # WhatsApp Business Cloud API credentials — externalized, never checked in. Empty by
+    # default so the app still boots (and every other feature keeps working) before an
+    # operator configures it; see the whatsapp module's outbox worker, which only requires
+    # these when it actually attempts a send.
+    phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
+    access-token: ${WHATSAPP_ACCESS_TOKEN:}
+    business-recipient-number: ${WHATSAPP_BUSINESS_RECIPIENT:}

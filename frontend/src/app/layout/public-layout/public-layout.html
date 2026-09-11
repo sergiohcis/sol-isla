@@ -1,0 +1,16 @@
+<div class="public-layout">
+  <header class="public-header">
+    <a routerLink="/" class="public-brand">Sol Isla</a>
+    <nav class="public-nav">
+      <a routerLink="/cart"><i class="pi pi-shopping-cart"></i></a>
+    </nav>
+  </header>
+
+  <main class="public-content">
+    <router-outlet />
+  </main>
+
+  <footer class="public-footer">
+    <span>&copy; {{ currentYear }} Sol Isla</span>
+  </footer>
+</div>

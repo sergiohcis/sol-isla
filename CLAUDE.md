@@ -4,16 +4,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-This repository currently contains no source code — only a design document at
-`doc/mobile_store_implementation_guide.md`. There is no backend, frontend, build
-tooling, package manifests, or test suite yet, and the directory is not (currently)
-a git repository. There are no build/lint/test commands to document because nothing
-has been scaffolded.
+Phase 1 (Foundation) is scaffolded: Spring Boot backend, Angular frontend, and the IIS
+deployment infra exist. Their tooling/conventions deliberately mirror the sibling
+`SweetHome` project (same shared Windows Server, same credentials, same non-Docker/
+session-cookie/Flyway/embedded-postgres-for-tests choices) — see
+`infrastructure/iis/README.md` for the deployment shape. Catalog, cart, checkout,
+payments, WhatsApp, etc. (Phases 2+) are not yet implemented; their backend packages
+exist only as empty `package-info.java` stubs to keep module boundaries in place.
 
-When asked to start implementation, follow the architecture and phased plan described
-below (full detail in the design doc) rather than inventing a different stack or
-structure. Once code exists, update this file with real build/lint/test commands and
-remove the guidance that's no longer needed.
+Build/test/run:
+
+```text
+Backend   (backend/):  ./mvnw spring-boot:run        # dev, needs application-local.yml
+                        ./mvnw test                    # unit + integration (embedded-postgres, no Docker)
+                        ./mvnw clean package            # prod jar
+
+Frontend  (frontend/): npm start                       # ng serve, proxies /api via proxy.conf.json
+                        npm run build                   # prod build -> dist/frontend/browser
+                        npm test                        # vitest
+```
+
+`backend/src/main/resources/application-local.yml` (gitignored) holds the local dev
+datasource; copy it yourself before running `spring-boot:run` locally — it is not
+checked in.
+
+Deviations from the design doc worth knowing about (chosen to match SweetHome rather
+than the doc's generic placeholder names): the Identity & Security module's package is
+`security` (not `auth`), and each module's service layer package is `providedService`
+(not `service`) — same convention as SweetHome. Package root is
+`com.hosannasolutions.solisla` (Java 25 / Spring Boot 4, matching SweetHome).
+
+When extending implementation, follow the architecture and phased plan described below
+(full detail in the design doc) rather than inventing a different stack or structure.
 
 ## What is being built
 

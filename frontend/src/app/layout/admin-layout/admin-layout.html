@@ -1,0 +1,26 @@
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="admin-brand">Sol Isla Admin</div>
+    <nav class="admin-nav">
+      @for (item of navItems; track item.path) {
+        <a [routerLink]="item.path" routerLinkActive="active" class="admin-nav-link">
+          <i [class]="item.icon"></i>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+  </aside>
+
+  <div class="admin-body">
+    <header class="admin-topbar">
+      @if (currentUser(); as user) {
+        <span class="admin-user">{{ user.email }} &middot; {{ user.role }}</span>
+      }
+      <p-button label="Log out" severity="secondary" (onClick)="logout()" />
+    </header>
+
+    <main class="admin-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

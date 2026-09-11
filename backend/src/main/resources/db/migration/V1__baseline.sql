@@ -1,0 +1,2 @@
+-- Baseline migration. Domain tables are added starting with the implementation sequence in
+-- CLAUDE.md (DB migrations -> domain models -> catalog API -> ...).

@@ -1,0 +1,48 @@
+@import "tailwindcss";
+@plugin "tailwindcss-primeui";
+
+@import "primeicons/primeicons.css";
+
+/* Placeholder base styling pending a real design pass — see theme.ts. */
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #f8f9fa;
+  color: #1f2937;
+}
+
+.font-mono,
+.p-inputnumber-input {
+  font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+}
+
+/* Global p-table look: light uppercase header, subtle borders, 6px radius, row hover.
+   PrimeNG's datatable classes render without view encapsulation, so this applies app-wide
+   without needing ::ng-deep in every screen. */
+.p-datatable .p-datatable-table {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-color: #e5e7eb;
+}
+
+.p-datatable .p-datatable-tbody > tr {
+  background: #ffffff;
+  color: #1f2937;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  border-color: #e5e7eb;
+}
+
+.p-datatable .p-datatable-tbody > tr:hover {
+  background: #f9fafb;
+}
