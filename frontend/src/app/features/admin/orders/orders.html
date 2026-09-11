@@ -1,0 +1,51 @@
+<div class="orders-header">
+  <h1>Orders</h1>
+</div>
+
+<div class="orders-filters">
+  <input pInputText placeholder="Search order #, customer, phone..." [(ngModel)]="q" (keyup.enter)="search()" />
+  <p-select [options]="statusOptions" optionLabel="label" optionValue="value" [(ngModel)]="status"
+            placeholder="All statuses" [showClear]="true" (onChange)="search()" />
+  <p-button label="Search" icon="pi pi-search" severity="secondary" (onClick)="search()" />
+</div>
+
+<p-table [value]="orders()" [loading]="loading()" dataKey="id" responsiveLayout="scroll">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Order #</th>
+      <th>Customer</th>
+      <th>Total</th>
+      <th>Payment</th>
+      <th>Status</th>
+      <th>Placed</th>
+      <th></th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-order>
+    <tr>
+      <td data-label="Order #">
+        <a [routerLink]="['/admin/orders', order.id]">{{ order.orderNumber }}</a>
+      </td>
+      <td data-label="Customer">
+        {{ order.customerName }}
+        <div class="customer-phone">{{ order.customerPhone }}</div>
+      </td>
+      <td data-label="Total">{{ order.grandTotal | number: '1.2-2' }} {{ order.currency }}</td>
+      <td data-label="Payment">{{ order.paymentMethod }} &middot; {{ order.paymentStatus }}</td>
+      <td data-label="Status">
+        <p-tag [value]="order.orderStatus" [severity]="severityFor(order.orderStatus)" />
+      </td>
+      <td data-label="Placed">{{ order.createdAt | date: 'short' }}</td>
+      <td>
+        <p-button icon="pi pi-arrow-right" severity="secondary" [text]="true" [routerLink]="['/admin/orders', order.id]" />
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="7">No orders found.</td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<p-paginator [rows]="pageSize" [totalRecords]="totalRecords()" (onPageChange)="onPageChange($event)" />

@@ -14,6 +14,7 @@ import com.hosannasolutions.solisla.common.storage.FileStorageException;
 import com.hosannasolutions.solisla.delivery.exception.DeliveryZoneNotFoundException;
 import com.hosannasolutions.solisla.inventory.exception.InsufficientStockException;
 import com.hosannasolutions.solisla.inventory.exception.InventoryNotFoundException;
+import com.hosannasolutions.solisla.order.exception.InvalidOrderStatusTransitionException;
 import com.hosannasolutions.solisla.order.exception.OrderNotFoundException;
 import com.hosannasolutions.solisla.user.exception.DuplicateUserEmailException;
 import com.hosannasolutions.solisla.user.exception.UserNotFoundException;
@@ -58,6 +59,7 @@ public class GlobalExceptionHandler {
             DuplicateUserEmailException.class,
             DuplicateSkuException.class,
             InvalidProductStatusTransitionException.class,
+            InvalidOrderStatusTransitionException.class,
             InsufficientStockException.class,
             ProductNotAvailableException.class,
             InvalidCartQuantityException.class,

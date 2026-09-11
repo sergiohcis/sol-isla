@@ -1,0 +1,97 @@
+<p-toast />
+
+<a routerLink="/admin/orders" class="back-link"><i class="pi pi-arrow-left"></i> Orders</a>
+
+@if (loading()) {
+  <p class="state-message">Loading...</p>
+} @else if (order(); as o) {
+  <div class="detail-header">
+    <h1>Order {{ o.orderNumber }}</h1>
+    <p-tag [value]="labelFor(o.orderStatus)" />
+  </div>
+  <p class="placed-at">Placed {{ o.createdAt | date: 'medium' }}</p>
+
+  <div class="order-detail-grid">
+    <section class="order-detail-main">
+      <div class="info-card">
+        <h3>Customer</h3>
+        <p>{{ o.customerName }}</p>
+        <p>{{ o.customerPhone }}</p>
+        @if (o.customerEmail) {
+          <p>{{ o.customerEmail }}</p>
+        }
+      </div>
+
+      <div class="info-card">
+        <h3>Delivery</h3>
+        <p>{{ o.deliveryAddress }}</p>
+        <p>{{ o.deliveryCity }}{{ o.deliveryPostalCode ? ', ' + o.deliveryPostalCode : '' }}</p>
+        @if (o.deliveryNotes) {
+          <p class="delivery-notes">{{ o.deliveryNotes }}</p>
+        }
+      </div>
+
+      <div class="info-card">
+        <h3>Items</h3>
+        <div class="item-lines">
+          @for (item of o.items; track item.skuSnapshot) {
+            <div class="item-line">
+              <div class="item-name-col">
+                <div class="item-name">{{ item.productNameSnapshot }}</div>
+                <div class="item-sku">{{ item.skuSnapshot }} &middot; {{ item.quantity }} x {{ item.finalUnitPrice | number: '1.2-2' }}</div>
+              </div>
+              <div class="item-total">{{ item.lineTotal | number: '1.2-2' }}</div>
+            </div>
+          }
+        </div>
+        <div class="summary-line">
+          <span>Subtotal</span>
+          <span>{{ o.subtotal | number: '1.2-2' }}</span>
+        </div>
+        @if (o.discountTotal > 0) {
+          <div class="summary-line">
+            <span>Discount</span>
+            <span>-{{ o.discountTotal | number: '1.2-2' }}</span>
+          </div>
+        }
+        <div class="summary-line">
+          <span>Delivery</span>
+          <span>{{ o.deliveryFee | number: '1.2-2' }}</span>
+        </div>
+        <div class="summary-line summary-total">
+          <span>Total</span>
+          <span>{{ o.grandTotal | number: '1.2-2' }} {{ o.currency }}</span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <h3>Payment</h3>
+        <p>{{ o.paymentMethod }} &middot; {{ o.paymentStatus }}</p>
+      </div>
+    </section>
+
+    <section class="order-detail-side">
+      @if (availableStatusTransitions.length > 0) {
+        <div class="side-card">
+          <h3>Move to</h3>
+          <div class="status-actions">
+            @for (next of availableStatusTransitions; track next) {
+              <p-button [label]="labelFor(next)" severity="secondary" size="small" [loading]="updating()" (onClick)="changeStatus(next)" />
+            }
+          </div>
+        </div>
+      }
+
+      @if (isAdmin() && canCancel) {
+        <div class="side-card">
+          <h3>Cancel order</h3>
+          <div class="cancel-form">
+            <input pInputText [(ngModel)]="cancelReason" name="cancelReason" placeholder="Reason" />
+            <p-button label="Cancel order" severity="danger" size="small" [loading]="cancelling()"
+                      [disabled]="!cancelReason.trim()" (onClick)="cancel()" />
+          </div>
+        </div>
+      }
+    </section>
+  </div>
+}

@@ -22,7 +22,21 @@ export interface OrderItemResponse {
   lineTotal: number;
 }
 
+export interface OrderSummary {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  grandTotal: number;
+  currency: string;
+  paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
+  orderStatus: OrderStatus;
+  createdAt: string;
+}
+
 export interface OrderResponse {
+  id: string;
   orderNumber: string;
   customerName: string;
   customerPhone: string;

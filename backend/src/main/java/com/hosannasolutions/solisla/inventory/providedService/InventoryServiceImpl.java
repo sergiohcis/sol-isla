@@ -94,4 +94,17 @@ public class InventoryServiceImpl implements InventoryService {
                 productId, InventoryMovementType.SALE, -quantity, "Order", orderId, "Checkout", actingUserId));
         return inventory;
     }
+
+    @Override
+    @Transactional
+    public Inventory restock(UUID productId, int quantity, UUID orderId, String reason, UUID actingUserId) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Restock quantity must be positive");
+        }
+        Inventory inventory = getByProductId(productId);
+        inventory.applyDelta(quantity);
+        movementRepository.save(new InventoryMovement(
+                productId, InventoryMovementType.RETURN, quantity, "Order", orderId, reason, actingUserId));
+        return inventory;
+    }
 }

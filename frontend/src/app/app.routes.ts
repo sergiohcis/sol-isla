@@ -36,6 +36,10 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'orders' },
       { path: 'orders', loadComponent: () => import('./features/admin/orders/orders').then((m) => m.Orders) },
+      {
+        path: 'orders/:id',
+        loadComponent: () => import('./features/admin/orders/order-detail/order-detail').then((m) => m.OrderDetail),
+      },
       { path: 'products', loadComponent: () => import('./features/admin/products/products').then((m) => m.Products) },
       {
         path: 'products/new',

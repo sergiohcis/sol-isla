@@ -27,4 +27,10 @@ public interface InventoryService {
      *  {@code ObjectOptimisticLockingFailureException} here, letting the whole checkout
      *  transaction roll back rather than silently overselling (CLAUDE.md rule 4). */
     Inventory sell(UUID productId, int quantity, UUID orderId, UUID actingUserId);
+
+    /** The mirror image of {@link #sell} — called when an order is rejected, cancelled, or
+     *  returned (Phase 6) after checkout already sold the stock. Records a {@code RETURN}
+     *  movement referencing the order rather than adjusting the counter directly, so the ledger
+     *  still explains where the quantity came from (CLAUDE.md rule 4). */
+    Inventory restock(UUID productId, int quantity, UUID orderId, String reason, UUID actingUserId);
 }

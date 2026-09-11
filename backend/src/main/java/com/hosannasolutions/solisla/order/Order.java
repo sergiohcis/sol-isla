@@ -14,8 +14,9 @@ import java.util.UUID;
 
 /** The central business object (design doc §17) — created once, atomically, by
  *  {@code CheckoutServiceImpl}, always starting {@code PENDING_CONFIRMATION}/{@code PENDING}.
- *  Nothing here is mutable yet: status-change methods land in Phase 6 alongside the admin
- *  endpoints that call them. */
+ *  {@link #changeStatus(OrderStatus)} is the only mutation, added in Phase 6 alongside the admin
+ *  endpoints that call it (transition validation lives in {@code OrderServiceImpl}, mirroring
+ *  {@code Product}/{@code ProductServiceImpl}). */
 @Entity
 @Table(name = "orders")
 public class Order {
@@ -116,6 +117,11 @@ public class Order {
         this.orderStatus = OrderStatus.PENDING_CONFIRMATION;
         this.createdAt = now;
         this.updatedAt = now;
+    }
+
+    public void changeStatus(OrderStatus status) {
+        this.orderStatus = status;
+        this.updatedAt = Instant.now();
     }
 
     public UUID getId() {
