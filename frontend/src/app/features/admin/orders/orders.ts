@@ -10,7 +10,7 @@ import { Tag } from 'primeng/tag';
 import { Paginator, PaginatorState } from 'primeng/paginator';
 import { PrimeTemplate } from 'primeng/api';
 import { OrderService } from '../../../core/services/order.service';
-import { OrderStatus, OrderSummary } from '../../../core/models/order.model';
+import { ORDER_STATUS_LABELS, OrderStatus, OrderSummary } from '../../../core/models/order.model';
 
 const STATUS_OPTIONS: { label: string; value: OrderStatus | null }[] = [
   { label: 'All statuses', value: null },
@@ -95,5 +95,9 @@ export class Orders implements OnInit {
 
   severityFor(status: OrderStatus): 'success' | 'secondary' | 'info' | 'warn' | 'danger' {
     return STATUS_SEVERITY[status];
+  }
+
+  labelFor(status: OrderStatus): string {
+    return ORDER_STATUS_LABELS[status];
   }
 }

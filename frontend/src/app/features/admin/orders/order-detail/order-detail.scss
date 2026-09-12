@@ -61,11 +61,23 @@
   h3 {
     margin: 0 0 0.5rem;
     font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+
+    i {
+      opacity: 0.6;
+      font-size: 0.85rem;
+    }
   }
 
   p {
     margin: 0 0 0.25rem;
     font-size: 0.9rem;
+
+    a {
+      color: inherit;
+    }
   }
 }
 
@@ -123,8 +135,116 @@
   gap: 0.5rem;
 }
 
+.danger-zone {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--p-content-border-color, #ddd);
+
+  h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #dc2626;
+    font-weight: 700;
+  }
+}
+
 .cancel-form {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+::ng-deep .placed-at-skeleton {
+  margin: 0.25rem 0 1rem;
+  display: block;
+}
+
+.status-stepper {
+  display: flex;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding: 0.25rem 0 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  flex: none;
+  min-width: 4.75rem;
+}
+
+.step-dot {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--p-content-border-color, #ddd);
+  color: transparent;
+  font-size: 0.7rem;
+  background: var(--p-content-background, #fff);
+  flex-shrink: 0;
+}
+
+.step-label {
+  font-size: 0.68rem;
+  text-align: center;
+  opacity: 0.6;
+  white-space: nowrap;
+}
+
+.step-connector {
+  flex: 1 0 1.5rem;
+  height: 2px;
+  background: var(--p-content-border-color, #ddd);
+  margin-top: 0.8rem;
+  min-width: 1rem;
+
+  &.done {
+    background: var(--p-primary-color, #6366f1);
+  }
+}
+
+.step.done .step-dot {
+  background: var(--p-primary-color, #6366f1);
+  border-color: var(--p-primary-color, #6366f1);
+  color: #fff;
+}
+
+.step.done .step-label {
+  opacity: 0.85;
+}
+
+.step.current .step-dot {
+  border-color: var(--p-primary-color, #6366f1);
+  border-width: 3px;
+}
+
+.step.current .step-label {
+  opacity: 1;
+  font-weight: 700;
+  color: var(--p-primary-color, #6366f1);
+}
+
+.status-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  background: #f3f4f6;
+  color: #374151;
+
+  &.cancelled, &.rejected, &.failed_delivery {
+    background: #fef2f2;
+    color: #991b1b;
+  }
 }

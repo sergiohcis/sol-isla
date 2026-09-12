@@ -25,4 +25,14 @@
 .customer-phone {
   font-size: 0.8rem;
   opacity: 0.65;
+
+  a {
+    color: inherit;
+  }
+}
+
+/* Orders still waiting on a human — the ones worth a staff member's eye at a glance. */
+:host ::ng-deep tr.needs-attention {
+  box-shadow: inset 3px 0 0 0 var(--p-yellow-500, #f59e0b);
+  background: var(--p-yellow-50, #fffbeb);
 }

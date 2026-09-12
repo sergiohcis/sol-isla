@@ -22,18 +22,18 @@
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-order>
-    <tr>
+    <tr [class.needs-attention]="order.orderStatus === 'PENDING_CONFIRMATION'">
       <td data-label="Order #">
         <a [routerLink]="['/admin/orders', order.id]">{{ order.orderNumber }}</a>
       </td>
       <td data-label="Customer">
         {{ order.customerName }}
-        <div class="customer-phone">{{ order.customerPhone }}</div>
+        <div class="customer-phone"><a [href]="'tel:' + order.customerPhone" (click)="$event.stopPropagation()">{{ order.customerPhone }}</a></div>
       </td>
       <td data-label="Total">{{ order.grandTotal | number: '1.2-2' }} {{ order.currency }}</td>
       <td data-label="Payment">{{ order.paymentMethod }} &middot; {{ order.paymentStatus }}</td>
       <td data-label="Status">
-        <p-tag [value]="order.orderStatus" [severity]="severityFor(order.orderStatus)" />
+        <p-tag [value]="labelFor(order.orderStatus)" [severity]="severityFor(order.orderStatus)" />
       </td>
       <td data-label="Placed">{{ order.createdAt | date: 'short' }}</td>
       <td>

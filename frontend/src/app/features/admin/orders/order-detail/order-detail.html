@@ -1,29 +1,61 @@
 <p-toast />
+<p-confirmdialog />
 
 <a routerLink="/admin/orders" class="back-link"><i class="pi pi-arrow-left"></i> Orders</a>
 
 @if (loading()) {
-  <p class="state-message">Loading...</p>
+  <div class="detail-header">
+    <p-skeleton width="10rem" height="1.5rem" />
+  </div>
+  <p-skeleton width="8rem" height="0.9rem" styleClass="placed-at-skeleton" />
+  <div class="order-detail-grid">
+    <section class="order-detail-main">
+      <p-skeleton height="6rem" />
+      <p-skeleton height="6rem" />
+      <p-skeleton height="10rem" />
+    </section>
+    <section class="order-detail-side">
+      <p-skeleton height="8rem" />
+    </section>
+  </div>
 } @else if (order(); as o) {
   <div class="detail-header">
     <h1>Order {{ o.orderNumber }}</h1>
-    <p-tag [value]="labelFor(o.orderStatus)" />
   </div>
   <p class="placed-at">Placed {{ o.createdAt | date: 'medium' }}</p>
+
+  @if (isOnHappyPath) {
+    <div class="status-stepper">
+      @for (step of happyPath; track step; let last = $last) {
+        <div class="step" [class]="stepState(step)">
+          <div class="step-dot"><i class="pi pi-check"></i></div>
+          <div class="step-label">{{ labelFor(step) }}</div>
+        </div>
+        @if (!last) {
+          <div class="step-connector" [class.done]="stepState(step) === 'done'"></div>
+        }
+      }
+    </div>
+  } @else {
+    <div class="status-banner" [class]="o.orderStatus.toLowerCase()">
+      <i class="pi pi-info-circle"></i>
+      <span>This order is <strong>{{ labelFor(o.orderStatus) }}</strong>.</span>
+    </div>
+  }
 
   <div class="order-detail-grid">
     <section class="order-detail-main">
       <div class="info-card">
-        <h3>Customer</h3>
+        <h3><i class="pi pi-user"></i> Customer</h3>
         <p>{{ o.customerName }}</p>
-        <p>{{ o.customerPhone }}</p>
+        <p><a [href]="'tel:' + o.customerPhone">{{ o.customerPhone }}</a></p>
         @if (o.customerEmail) {
-          <p>{{ o.customerEmail }}</p>
+          <p><a [href]="'mailto:' + o.customerEmail">{{ o.customerEmail }}</a></p>
         }
       </div>
 
       <div class="info-card">
-        <h3>Delivery</h3>
+        <h3><i class="pi pi-map-marker"></i> Delivery</h3>
         <p>{{ o.deliveryAddress }}</p>
         <p>{{ o.deliveryCity }}{{ o.deliveryPostalCode ? ', ' + o.deliveryPostalCode : '' }}</p>
         @if (o.deliveryNotes) {
@@ -32,7 +64,7 @@
       </div>
 
       <div class="info-card">
-        <h3>Items</h3>
+        <h3><i class="pi pi-shopping-bag"></i> Items</h3>
         <div class="item-lines">
           @for (item of o.items; track item.skuSnapshot) {
             <div class="item-line">
@@ -65,31 +97,33 @@
       </div>
 
       <div class="info-card">
-        <h3>Payment</h3>
+        <h3><i class="pi pi-credit-card"></i> Payment</h3>
         <p>{{ o.paymentMethod }} &middot; {{ o.paymentStatus }}</p>
       </div>
     </section>
 
     <section class="order-detail-side">
-      @if (availableStatusTransitions.length > 0) {
+      @if (hasActions) {
         <div class="side-card">
-          <h3>Move to</h3>
-          <div class="status-actions">
-            @for (next of availableStatusTransitions; track next) {
-              <p-button [label]="labelFor(next)" severity="secondary" size="small" [loading]="updating()" (onClick)="changeStatus(next)" />
-            }
-          </div>
-        </div>
-      }
+          <h3>Actions</h3>
+          @if (availableStatusTransitions.length > 0) {
+            <div class="status-actions">
+              @for (next of availableStatusTransitions; track next) {
+                <p-button [label]="labelFor(next)" severity="secondary" size="small" [loading]="updating()" (onClick)="changeStatus(next)" />
+              }
+            </div>
+          }
 
-      @if (isAdmin() && canCancel) {
-        <div class="side-card">
-          <h3>Cancel order</h3>
-          <div class="cancel-form">
-            <input pInputText [(ngModel)]="cancelReason" name="cancelReason" placeholder="Reason" />
-            <p-button label="Cancel order" severity="danger" size="small" [loading]="cancelling()"
-                      [disabled]="!cancelReason.trim()" (onClick)="cancel()" />
-          </div>
+          @if (isAdmin() && canCancel) {
+            <div class="danger-zone">
+              <h4>Danger zone</h4>
+              <div class="cancel-form">
+                <input pInputText [(ngModel)]="cancelReason" name="cancelReason" placeholder="Reason for cancelling" />
+                <p-button label="Cancel order" severity="danger" size="small" [loading]="cancelling()"
+                          [disabled]="!cancelReason.trim()" (onClick)="confirmCancel()" />
+              </div>
+            </div>
+          }
         </div>
       }
     </section>

@@ -4,12 +4,19 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
-import { Tag } from 'primeng/tag';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmDialog } from 'primeng/confirmdialog';
+import { Skeleton } from 'primeng/skeleton';
 import { Toast } from 'primeng/toast';
 import { OrderService } from '../../../../core/services/order.service';
 import { CurrentUserService } from '../../../../core/auth/current-user.service';
-import { OrderResponse, OrderStatus } from '../../../../core/models/order.model';
+import {
+  ORDER_HAPPY_PATH,
+  ORDER_STATUS_LABELS,
+  ORDER_TERMINAL_BRANCH_STATUSES,
+  OrderResponse,
+  OrderStatus,
+} from '../../../../core/models/order.model';
 
 /** Mirrors the backend's ALLOWED_TRANSITIONS in OrderServiceImpl — kept in sync manually, the
  *  backend is authoritative and re-validates regardless (CLAUDE.md rule 9). REJECTED/CANCELLED/
@@ -32,23 +39,12 @@ const STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
  *  the backend independently enforces this regardless of what the UI shows. */
 const CANCELLABLE_FROM: OrderStatus[] = ['PENDING_CONFIRMATION', 'CONFIRMED', 'PREPARING', 'READY_FOR_DELIVERY', 'OUT_FOR_DELIVERY'];
 
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  PENDING_CONFIRMATION: 'Pending confirmation',
-  CONFIRMED: 'Confirmed',
-  PREPARING: 'Preparing',
-  READY_FOR_DELIVERY: 'Ready for delivery',
-  OUT_FOR_DELIVERY: 'Out for delivery',
-  DELIVERED: 'Delivered',
-  CANCELLED: 'Cancelled',
-  REJECTED: 'Rejected',
-  FAILED_DELIVERY: 'Failed delivery',
-  RETURNED: 'Returned',
-};
+type StepState = 'done' | 'current' | 'upcoming';
 
 @Component({
   selector: 'app-order-detail',
-  imports: [FormsModule, RouterLink, Button, InputText, Tag, Toast, DecimalPipe, DatePipe],
-  providers: [MessageService],
+  imports: [FormsModule, RouterLink, Button, InputText, Toast, ConfirmDialog, Skeleton, DecimalPipe, DatePipe],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './order-detail.html',
   styleUrl: './order-detail.scss',
 })
@@ -56,6 +52,7 @@ export class OrderDetail implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly orderService = inject(OrderService);
   private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
   private readonly currentUserService = inject(CurrentUserService);
 
   readonly order = signal<OrderResponse | null>(null);
@@ -63,6 +60,7 @@ export class OrderDetail implements OnInit {
   readonly updating = signal(false);
   readonly cancelling = signal(false);
   readonly isAdmin = this.currentUserService.isAdmin;
+  readonly happyPath = ORDER_HAPPY_PATH;
 
   cancelReason = '';
 
@@ -80,12 +78,34 @@ export class OrderDetail implements OnInit {
     return current !== undefined && CANCELLABLE_FROM.includes(current);
   }
 
+  get isOnHappyPath(): boolean {
+    const current = this.order()?.orderStatus;
+    return current !== undefined && !ORDER_TERMINAL_BRANCH_STATUSES.includes(current);
+  }
+
+  get hasActions(): boolean {
+    return this.availableStatusTransitions.length > 0 || (this.isAdmin() && this.canCancel);
+  }
+
   ngOnInit(): void {
     this.load();
   }
 
   labelFor(status: OrderStatus): string {
-    return STATUS_LABELS[status];
+    return ORDER_STATUS_LABELS[status];
+  }
+
+  stepState(status: OrderStatus): StepState {
+    const current = this.order()?.orderStatus;
+    if (!current) {
+      return 'upcoming';
+    }
+    const currentIndex = this.happyPath.indexOf(current);
+    const stepIndex = this.happyPath.indexOf(status);
+    if (stepIndex < currentIndex) {
+      return 'done';
+    }
+    return stepIndex === currentIndex ? 'current' : 'upcoming';
   }
 
   private load(): void {
@@ -114,10 +134,24 @@ export class OrderDetail implements OnInit {
     });
   }
 
-  cancel(): void {
+  confirmCancel(): void {
     if (!this.cancelReason.trim()) {
       return;
     }
+    const orderNumber = this.order()?.orderNumber;
+    this.confirmationService.confirm({
+      header: 'Cancel order',
+      message: `Cancel order ${orderNumber}? This restocks its inventory and cannot be undone.`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Cancel order',
+      acceptButtonProps: { severity: 'danger' },
+      rejectLabel: 'Keep order',
+      rejectButtonProps: { severity: 'secondary', outlined: true },
+      accept: () => this.cancel(),
+    });
+  }
+
+  private cancel(): void {
     this.cancelling.set(true);
     this.orderService.cancel(this.orderId, this.cancelReason).subscribe({
       next: (order) => {
