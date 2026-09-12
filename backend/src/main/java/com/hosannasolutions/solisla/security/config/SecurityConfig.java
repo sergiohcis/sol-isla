@@ -1,6 +1,7 @@
 package com.hosannasolutions.solisla.security.config;
 
 import com.hosannasolutions.solisla.security.userdetails.SolIslaUserDetailsService;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,7 +20,9 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.Duration;
 
 /**
  * Server-side session + httpOnly cookie + CSRF, not JWT — same reasoning as SweetHome: this
@@ -58,6 +61,20 @@ public class SecurityConfig {
         return new HttpSessionSecurityContextRepository();
     }
 
+    /**
+     * {@code RateLimitFilter} is a {@code @Component} (so its limits can be {@code @Value}-
+     * configured) — Spring Boot's servlet-filter auto-configuration would otherwise register it
+     * a *second* time as a generic servlet filter in addition to the explicit
+     * {@code addFilterBefore} wiring below, running every request through it twice. Disable that
+     * automatic registration; Spring Security's own chain is the only place it should run.
+     */
+    @Bean
+    public FilterRegistrationBean<RateLimitFilter> disableRateLimitFilterAutoRegistration(RateLimitFilter rateLimitFilter) {
+        FilterRegistrationBean<RateLimitFilter> registration = new FilterRegistrationBean<>(rateLimitFilter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
     @Bean
     public AuthenticationManager authenticationManager(
             SolIslaUserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
@@ -67,7 +84,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityContextRepository securityContextRepository)
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http, SecurityContextRepository securityContextRepository, RateLimitFilter rateLimitFilter)
             throws Exception {
         http
                 .csrf(csrf -> csrf
@@ -79,11 +97,36 @@ public class SecurityConfig {
                         // Security recipe for SPA clients).
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
                 .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
+                .addFilterBefore(rateLimitFilter, CsrfFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .securityContext(securityContext -> securityContext.securityContextRepository(securityContextRepository))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(PUBLIC_API_MATCHERS).permitAll()
+                        // Unauthenticated health check only — everything else under /actuator/**
+                        // (info, and anything added later) needs a logged-in session, and IIS
+                        // never proxies /actuator/** externally anyway (frontend-web.config only
+                        // rewrites ^api/(.*)).
+                        .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated())
+                .headers(headers -> headers
+                        // Not a Spring Security default — explicit rather than left to chance.
+                        .referrerPolicy(referrer -> referrer
+                                .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        // Same-origin SPA + API (no CDN scripts) other than the Google Fonts
+                        // origins already loaded in frontend/src/index.html. font-src needs
+                        // 'self' too, not just the Google Fonts origin — the admin UI's own
+                        // PrimeIcons webfont is bundled and served same-origin.
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                "default-src 'self'; "
+                                        + "style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; "
+                                        + "font-src 'self' https://fonts.gstatic.com; "
+                                        + "img-src 'self' data:"))
+                        // Explicit rather than relying on the Spring Security default matching
+                        // what's wanted — request.isSecure() already resolves correctly behind
+                        // IIS via server.forward-headers-strategy: framework.
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(Duration.ofDays(365).toSeconds())))
                 .exceptionHandling(handling -> handling.authenticationEntryPoint(unauthorizedEntryPoint()))
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .formLogin(formLogin -> formLogin.disable());

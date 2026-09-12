@@ -1,6 +1,17 @@
 server:
   forward-headers-strategy: framework
 
+# Only health/info are exposed at all — see SecurityConfig for why only /actuator/health is
+# unauthenticated (everything else, info included, needs a logged-in admin session).
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
 spring:
   application:
     name: SolIslaBackend
@@ -25,6 +36,21 @@ sol-isla:
     local-path: ${STORAGE_PATH:./storage}
   cart:
     max-quantity-per-item: 20
+  rate-limit:
+    # Per-client-IP sliding window (RateLimitFilter) — brute-force/enumeration/spam guard on
+    # login, checkout, and order tracking. A test that legitimately needs more headroom (e.g.
+    # OrderAdminControllerIT logging in once per test method) overrides via @TestPropertySource
+    # rather than a same-named src/test/resources/application.yml — that file would *replace*,
+    # not merge with, this one on the test classpath and silently break every other property here.
+    login:
+      max-requests: 5
+      window-minutes: 5
+    checkout:
+      max-requests: 10
+      window-minutes: 1
+    track:
+      max-requests: 10
+      window-minutes: 1
   whatsapp:
     # WhatsApp Business Cloud API credentials — externalized, never checked in. Empty by
     # default so the app still boots (and every other feature keeps working) before an

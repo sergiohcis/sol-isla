@@ -34,3 +34,24 @@ Deploy steps:
 **Before the first real deploy**, confirm port 6003 is actually free on `192.168.1.74` (check
 what else is running there beyond SweetHome's 6002) and that DNS for
 `sol-isla.hosanna-solutions.com` points at this server.
+
+## Database backups
+
+`infrastructure/db/backup-postgres.ps1` dumps `sol_isla_prod` (compressed, via `pg_dump -Fc`)
+to a timestamped file and prunes anything older than 14 days (configurable). It's a standalone
+script — not wired into the app — meant to run daily via Windows Task Scheduler on
+`192.168.1.74`:
+
+1. Copy `backup-postgres.ps1` to the server (e.g. `C:\inetpub\wwwroot\sol-isla\backup\backup-postgres.ps1`).
+2. Register the scheduled task (adjust the path and `DB_PASSWORD`):
+   ```powershell
+   $action = New-ScheduledTaskAction -Execute "powershell.exe" `
+       -Argument '-NoProfile -Command "$env:PGPASSWORD=''__FILL_IN_AT_DEPLOY_TIME__''; & \"C:\inetpub\wwwroot\sol-isla\backup\backup-postgres.ps1\""'
+   $trigger = New-ScheduledTaskTrigger -Daily -At 3am
+   Register-ScheduledTask -TaskName "SolIslaPostgresBackup" -Action $action -Trigger $trigger -RunLevel Highest
+   ```
+3. Backups land in `C:\inetpub\wwwroot\sol-isla\backup\backups\`. **This script does not copy
+   them off-box** — that's a separate, manual (or separately automated) step; a backup that
+   lives only on the same server it protects doesn't survive that server failing.
+
+To restore: `pg_restore --host=localhost --port=5433 --username=postgres --dbname=sol_isla_prod --clean <file>.dump`.

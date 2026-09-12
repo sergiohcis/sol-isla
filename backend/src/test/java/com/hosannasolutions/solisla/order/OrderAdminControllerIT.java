@@ -36,6 +36,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -47,6 +48,11 @@ import org.springframework.web.context.WebApplicationContext;
  *  order restocks the inventory checkout already sold. */
 @SpringBootTest
 @Transactional
+// This class's helper logs in once per @Test method (5 methods = 5 real login attempts against
+// the shared RateLimitFilter state for this context) — production's default login limit (5 per
+// 5 min, see application.yml) would otherwise sit exactly at that boundary and break the moment
+// a 6th test method needing login is added.
+@TestPropertySource(properties = "sol-isla.rate-limit.login.max-requests=100")
 class OrderAdminControllerIT {
 
     private static EmbeddedPostgres embeddedPostgres;
